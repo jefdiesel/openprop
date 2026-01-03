@@ -1,0 +1,191 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { documents } from '@/lib/db/schema'
+import { auth } from '@/lib/auth'
+import { eq, and, desc, asc, ilike, sql, count } from 'drizzle-orm'
+import * as z from 'zod'
+import type { Block } from '@/types/database'
+
+// Schema for creating a document
+const createDocumentSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(255),
+  content: z.array(z.unknown()).default([]),
+  is_template: z.boolean().default(false),
+  template_category: z.string().nullable().optional(),
+  variables: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).nullable().optional(),
+  settings: z.object({
+    allowDownload: z.boolean().optional(),
+    allowPrinting: z.boolean().optional(),
+    requireSigningOrder: z.boolean().optional(),
+    expirationDays: z.number().optional(),
+    reminderDays: z.array(z.number()).optional(),
+    redirectUrl: z.string().optional(),
+    brandColor: z.string().optional(),
+    logoUrl: z.string().optional(),
+  }).nullable().optional(),
+})
+
+// GET /api/documents - List user's documents
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth()
+    const userId = session?.user?.id
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const isTemplate = searchParams.get('is_template')
+    const search = searchParams.get('search')
+    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const sortBy = searchParams.get('sort_by') || 'updated_at'
+    const sortOrder = searchParams.get('sort_order') || 'desc'
+
+    // Build conditions
+    const conditions = [eq(documents.userId, userId)]
+
+    if (status) {
+      conditions.push(eq(documents.status, status as 'draft' | 'sent' | 'viewed' | 'completed' | 'expired' | 'declined'))
+    }
+
+    if (isTemplate !== null) {
+      conditions.push(eq(documents.isTemplate, isTemplate === 'true'))
+    }
+
+    if (search) {
+      conditions.push(ilike(documents.title, `%${search}%`))
+    }
+
+    // Determine sort column and order
+    const validSortColumns = ['createdAt', 'updatedAt', 'title', 'status'] as const
+    type SortColumn = typeof validSortColumns[number]
+    const columnMap: Record<string, SortColumn> = {
+      'created_at': 'createdAt',
+      'updated_at': 'updatedAt',
+      'title': 'title',
+      'status': 'status',
+    }
+    const column = columnMap[sortBy] || 'updatedAt'
+    const orderFn = sortOrder === 'asc' ? asc : desc
+
+    // Query documents with pagination
+    const [docs, [{ total }]] = await Promise.all([
+      db.select()
+        .from(documents)
+        .where(and(...conditions))
+        .orderBy(orderFn(documents[column]))
+        .limit(limit)
+        .offset(offset),
+      db.select({ total: count() })
+        .from(documents)
+        .where(and(...conditions)),
+    ])
+
+    // Transform to match expected format (snake_case for API response)
+    const transformedDocs = docs.map(doc => ({
+      id: doc.id,
+      user_id: doc.userId,
+      title: doc.title,
+      status: doc.status,
+      content: doc.content,
+      variables: doc.variables,
+      settings: doc.settings,
+      is_template: doc.isTemplate,
+      template_category: doc.templateCategory,
+      created_at: doc.createdAt?.toISOString() || null,
+      updated_at: doc.updatedAt?.toISOString() || null,
+      sent_at: doc.sentAt?.toISOString() || null,
+      expires_at: doc.expiresAt?.toISOString() || null,
+    }))
+
+    return NextResponse.json({
+      documents: transformedDocs,
+      pagination: {
+        total: total || 0,
+        limit,
+        offset,
+        hasMore: (total || 0) > offset + limit,
+      },
+    })
+  } catch (error) {
+    console.error('Error in GET /api/documents:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/documents - Create a new document
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth()
+    const userId = session?.user?.id
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Parse and validate request body
+    const body = await request.json()
+    const validationResult = createDocumentSchema.safeParse(body)
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { title, content, is_template, template_category, variables, settings } = validationResult.data
+
+    // Create document
+    const [document] = await db.insert(documents)
+      .values({
+        userId,
+        title,
+        content: content as Block[],
+        status: 'draft',
+        isTemplate: is_template,
+        templateCategory: template_category || null,
+        variables: (variables as Record<string, unknown>) || null,
+        settings: (settings as Record<string, unknown>) || null,
+      })
+      .returning()
+
+    // Transform to match expected format
+    const transformedDoc = {
+      id: document.id,
+      user_id: document.userId,
+      title: document.title,
+      status: document.status,
+      content: document.content,
+      variables: document.variables,
+      settings: document.settings,
+      is_template: document.isTemplate,
+      template_category: document.templateCategory,
+      created_at: document.createdAt?.toISOString() || null,
+      updated_at: document.updatedAt?.toISOString() || null,
+      sent_at: document.sentAt?.toISOString() || null,
+      expires_at: document.expiresAt?.toISOString() || null,
+    }
+
+    return NextResponse.json({ document: transformedDoc }, { status: 201 })
+  } catch (error) {
+    console.error('Error in POST /api/documents:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

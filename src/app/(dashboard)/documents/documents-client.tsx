@@ -1,0 +1,249 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search, MoreHorizontal, Pencil, Copy, Send, Trash2, Eye } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+
+type DocumentStatus = "draft" | "sent" | "viewed" | "signed" | "completed" | "expired" | "declined";
+
+interface Document {
+  id: string;
+  title: string;
+  status: DocumentStatus;
+  recipient: { name: string; email: string };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface DocumentsClientProps {
+  documents: Document[];
+  statusCounts: Record<string, number>;
+}
+
+type TabValue = "all" | DocumentStatus;
+
+const tabs: { value: TabValue; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+  { value: "completed", label: "Completed" },
+];
+
+const statusColors: Record<DocumentStatus, string> = {
+  draft: "bg-gray-100 text-gray-800",
+  sent: "bg-blue-100 text-blue-800",
+  viewed: "bg-yellow-100 text-yellow-800",
+  signed: "bg-green-100 text-green-800",
+  completed: "bg-green-100 text-green-800",
+  expired: "bg-red-100 text-red-800",
+  declined: "bg-red-100 text-red-800",
+};
+
+export function DocumentsClient({ documents, statusCounts }: DocumentsClientProps) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [activeTab, setActiveTab] = React.useState<TabValue>("all");
+
+  const filteredDocuments = React.useMemo(() => {
+    let docs = documents;
+
+    if (activeTab !== "all") {
+      docs = docs.filter((doc) => doc.status === activeTab);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      docs = docs.filter(
+        (doc) =>
+          doc.title.toLowerCase().includes(query) ||
+          doc.recipient.name.toLowerCase().includes(query) ||
+          doc.recipient.email.toLowerCase().includes(query)
+      );
+    }
+
+    return docs;
+  }, [documents, activeTab, searchQuery]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this document?")) return;
+
+    try {
+      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Document deleted");
+      router.refresh();
+    } catch {
+      toast.error("Failed to delete document");
+    }
+  };
+
+  const handleDuplicate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/documents/${id}/duplicate`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to duplicate");
+      const data = await res.json();
+      toast.success("Document duplicated");
+      router.push(`/documents/${data.document.id}/edit`);
+    } catch {
+      toast.error("Failed to duplicate document");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle>All Documents</CardTitle>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
+          <TabsList className="mb-4">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+                <span className="ml-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                  {statusCounts[tab.value] || 0}
+                </span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value={activeTab}>
+            {filteredDocuments.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground">
+                No documents found
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Document</TableHead>
+                    <TableHead>Recipient</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredDocuments.map((doc) => {
+                    const viewUrl = doc.status === "draft"
+                      ? `/documents/${doc.id}/edit`
+                      : `/documents/${doc.id}`;
+                    return (
+                    <TableRow key={doc.id}>
+                      <TableCell>
+                        <Link
+                          href={viewUrl}
+                          className="font-medium hover:underline"
+                        >
+                          {doc.title}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {doc.recipient.name || doc.recipient.email ? (
+                          <div>
+                            <div className="text-sm">{doc.recipient.name || "—"}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {doc.recipient.email}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={statusColors[doc.status]}>
+                          {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {doc.updatedAt.toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {doc.status === "draft" ? (
+                              <DropdownMenuItem asChild>
+                                <Link href={`/documents/${doc.id}/edit`}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem asChild>
+                                <Link href={`/documents/${doc.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleDuplicate(doc.id)}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            {doc.status === "draft" && (
+                              <DropdownMenuItem asChild>
+                                <Link href={`/documents/${doc.id}/edit`}>
+                                  <Send className="mr-2 h-4 w-4" />
+                                  Send
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDelete(doc.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );})}
+                </TableBody>
+              </Table>
+            )}
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
