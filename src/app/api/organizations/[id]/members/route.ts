@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
-import { verificationTokens } from "@/lib/db/schema";
+import { verificationTokens, users } from "@/lib/db/schema";
 import { v4 as uuidv4 } from "uuid";
 import { createHash } from "crypto";
+import { eq } from "drizzle-orm";
 import {
   getOrganizationMembers,
   getOrganizationInvites,
@@ -106,57 +107,88 @@ export async function POST(
       authCheck.userId!
     );
 
-    // Create a magic link that authenticates AND redirects to invite accept
+    // Check if user already exists
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const inviteUrl = `${baseUrl}/invite/${invite.token}`;
     let emailSent = false;
     let emailError: string | null = null;
 
+    // Check if user already has an account
+    const [existingUser] = await db.select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
     if (resend && org) {
       try {
-        // Generate a verification token for magic link auth
-        // NextAuth stores hashed tokens, so we hash before storing
-        const rawToken = uuidv4();
-        const hashedToken = createHash("sha256")
-          .update(`${rawToken}${process.env.AUTH_SECRET || ""}`)
-          .digest("hex");
-        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-        // Store the hashed verification token (NextAuth will hash incoming token to match)
-        await db.insert(verificationTokens).values({
-          identifier: email.toLowerCase(),
-          token: hashedToken,
-          expires,
-        });
-
-        // Build the magic link URL that authenticates and redirects to invite
-        const callbackUrl = encodeURIComponent(`/invite/${invite.token}`);
-        const magicLinkUrl = `${baseUrl}/api/auth/callback/resend?token=${rawToken}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
-
         const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@sendprop.com>";
-        await resend.emails.send({
-          from: fromEmail,
-          to: email,
-          subject: `You've been invited to join ${org.name} on SendProp`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #1a1a1a;">You're invited!</h1>
-              <p>You've been invited to join <strong>${org.name}</strong> on SendProp as a ${role}.</p>
-              <p>
-                <a href="${magicLinkUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-                  Accept Invitation
-                </a>
-              </p>
-              <p style="color: #666; font-size: 14px;">
-                This link will expire in 24 hours.
-              </p>
-              <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-              <p style="color: #999; font-size: 12px;">
-                If you didn't expect this invitation, you can ignore this email.
-              </p>
-            </div>
-          `,
-        });
+
+        if (existingUser) {
+          // User exists - send regular invite link (they can log in normally)
+          await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: `You've been invited to join ${org.name} on SendProp`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #1a1a1a;">You're invited!</h1>
+                <p>You've been invited to join <strong>${org.name}</strong> on SendProp as a ${role}.</p>
+                <p>
+                  <a href="${inviteUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                    Accept Invitation
+                  </a>
+                </p>
+                <p style="color: #666; font-size: 14px;">
+                  This invitation will expire in 7 days.
+                </p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                <p style="color: #999; font-size: 12px;">
+                  If you didn't expect this invitation, you can ignore this email.
+                </p>
+              </div>
+            `,
+          });
+        } else {
+          // New user - send magic link that creates account AND redirects to invite
+          const rawToken = uuidv4();
+          const hashedToken = createHash("sha256")
+            .update(`${rawToken}${process.env.AUTH_SECRET || ""}`)
+            .digest("hex");
+          const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+          await db.insert(verificationTokens).values({
+            identifier: email.toLowerCase(),
+            token: hashedToken,
+            expires,
+          });
+
+          const callbackUrl = encodeURIComponent(`/invite/${invite.token}`);
+          const magicLinkUrl = `${baseUrl}/api/auth/callback/resend?token=${rawToken}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
+
+          await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: `You've been invited to join ${org.name} on SendProp`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #1a1a1a;">You're invited!</h1>
+                <p>You've been invited to join <strong>${org.name}</strong> on SendProp as a ${role}.</p>
+                <p>
+                  <a href="${magicLinkUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                    Accept Invitation
+                  </a>
+                </p>
+                <p style="color: #666; font-size: 14px;">
+                  This link will expire in 24 hours.
+                </p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                <p style="color: #999; font-size: 12px;">
+                  If you didn't expect this invitation, you can ignore this email.
+                </p>
+              </div>
+            `,
+          });
+        }
         emailSent = true;
       } catch (err) {
         console.error("Failed to send invite email:", err);
