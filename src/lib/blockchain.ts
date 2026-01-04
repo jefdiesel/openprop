@@ -234,3 +234,159 @@ export function getChainInfo() {
     explorerUrl: 'https://basescan.org',
   };
 }
+
+// ============= ETHSCRIPTION SUPPORT =============
+
+import { mainnet, arbitrum, optimism, polygon, type Chain } from 'viem/chains';
+
+export type EthscriptionNetwork = 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'polygon';
+
+const NETWORK_CONFIG: Record<EthscriptionNetwork, {
+  chain: Chain;
+  rpcUrl: string;
+  explorerUrl: string;
+  name: string;
+}> = {
+  ethereum: {
+    chain: mainnet,
+    rpcUrl: process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
+    explorerUrl: 'https://etherscan.io/tx',
+    name: 'Ethereum',
+  },
+  base: {
+    chain: base,
+    rpcUrl: BLOCKCHAIN_RPC_URL,
+    explorerUrl: 'https://basescan.org/tx',
+    name: 'Base',
+  },
+  arbitrum: {
+    chain: arbitrum,
+    rpcUrl: process.env.ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
+    explorerUrl: 'https://arbiscan.io/tx',
+    name: 'Arbitrum',
+  },
+  optimism: {
+    chain: optimism,
+    rpcUrl: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
+    explorerUrl: 'https://optimistic.etherscan.io/tx',
+    name: 'Optimism',
+  },
+  polygon: {
+    chain: polygon,
+    rpcUrl: process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com',
+    explorerUrl: 'https://polygonscan.com/tx',
+    name: 'Polygon',
+  },
+};
+
+export interface EthscriptionResult {
+  success: boolean;
+  txHash?: Hash;
+  network?: EthscriptionNetwork;
+  explorerUrl?: string;
+  error?: string;
+}
+
+/**
+ * Get wallet client for a specific network
+ */
+function getNetworkWalletClient(network: EthscriptionNetwork) {
+  if (!BLOCKCHAIN_PRIVATE_KEY) {
+    throw new Error('BLOCKCHAIN_PRIVATE_KEY environment variable is not set');
+  }
+
+  const config = NETWORK_CONFIG[network];
+  const formattedKey = BLOCKCHAIN_PRIVATE_KEY.startsWith('0x')
+    ? BLOCKCHAIN_PRIVATE_KEY as `0x${string}`
+    : `0x${BLOCKCHAIN_PRIVATE_KEY}` as `0x${string}`;
+
+  const account = privateKeyToAccount(formattedKey);
+
+  return createWalletClient({
+    account,
+    chain: config.chain,
+    transport: http(config.rpcUrl),
+  });
+}
+
+/**
+ * Get public client for a specific network
+ */
+function getNetworkPublicClient(network: EthscriptionNetwork) {
+  const config = NETWORK_CONFIG[network];
+  return createPublicClient({
+    chain: config.chain,
+    transport: http(config.rpcUrl),
+  });
+}
+
+/**
+ * Inscribe data to a recipient address on a specific network
+ * This is the core ethscription function that sends base64 data to the recipient
+ */
+export async function inscribeDataToAddress(
+  base64Payload: string,
+  recipientAddress: Address,
+  network: EthscriptionNetwork
+): Promise<EthscriptionResult> {
+  if (!isBlockchainConfigured()) {
+    return {
+      success: false,
+      error: 'Blockchain not configured - missing BLOCKCHAIN_PRIVATE_KEY',
+    };
+  }
+
+  try {
+    const walletClient = getNetworkWalletClient(network);
+    const publicClient = getNetworkPublicClient(network);
+    const config = NETWORK_CONFIG[network];
+
+    // The payload is already base64, convert to hex for transaction data
+    const txData = toHex(base64Payload) as `0x${string}`;
+
+    // Send transaction TO the recipient address with the data
+    const txHash = await walletClient.sendTransaction({
+      to: recipientAddress,
+      value: BigInt(0),
+      data: txData,
+    });
+
+    // Wait for confirmation
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+      confirmations: 1,
+    });
+
+    if (receipt.status === 'success') {
+      return {
+        success: true,
+        txHash,
+        network,
+        explorerUrl: `${config.explorerUrl}/${txHash}`,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Transaction failed',
+      };
+    }
+  } catch (error) {
+    console.error(`Error inscribing to ${network}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Get network info for display
+ */
+export function getNetworkInfo(network: EthscriptionNetwork) {
+  const config = NETWORK_CONFIG[network];
+  return {
+    name: config.name,
+    explorerUrl: config.explorerUrl,
+    chainId: config.chain.id,
+  };
+}

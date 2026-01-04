@@ -11,7 +11,18 @@ import {
   Mail,
   Share2,
   CreditCard,
+  FileCode2,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
+
+interface EthscriptionInfo {
+  network: string;
+  recipientAddress: string;
+  status: "pending" | "inscribed" | "failed";
+  txHash?: string;
+  explorerUrl?: string;
+}
 
 interface CompletionScreenProps {
   documentTitle: string;
@@ -26,6 +37,8 @@ interface CompletionScreenProps {
   paymentCollected?: boolean;
   paymentAmount?: number;
   paymentCurrency?: string;
+  // Ethscription info
+  ethscriptions?: EthscriptionInfo[];
 }
 
 // Simple confetti effect
@@ -113,6 +126,7 @@ export function CompletionScreen({
   paymentCollected = false,
   paymentAmount,
   paymentCurrency = "USD",
+  ethscriptions = [],
 }: CompletionScreenProps) {
   const [showConfettiAnimation, setShowConfettiAnimation] = useState(false);
 
@@ -201,6 +215,36 @@ export function CompletionScreen({
                     </span>
                   </div>
                 )}
+                {ethscriptions.length > 0 && ethscriptions.map((eth, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    {eth.status === "pending" ? (
+                      <Loader2 className="h-4 w-4 text-yellow-500 animate-spin" />
+                    ) : eth.status === "inscribed" ? (
+                      <FileCode2 className="h-4 w-4 text-purple-500" />
+                    ) : (
+                      <FileCode2 className="h-4 w-4 text-destructive" />
+                    )}
+                    <span className="flex items-center gap-1">
+                      {eth.status === "pending" && `Ethscription pending on ${eth.network}...`}
+                      {eth.status === "inscribed" && (
+                        <>
+                          Inscribed on {eth.network}
+                          {eth.explorerUrl && (
+                            <a
+                              href={eth.explorerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:underline inline-flex items-center gap-0.5"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </>
+                      )}
+                      {eth.status === "failed" && `Ethscription failed on ${eth.network}`}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

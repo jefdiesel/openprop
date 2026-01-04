@@ -361,6 +361,31 @@ export function DocumentViewer({
                   return null;
                 }
 
+                // Handle data-uri (ethscription) blocks in sign mode
+                if (dbBlock.type === "data-uri") {
+                  const blockData = (dbBlock as any).data || dbBlock;
+                  const dataUriBlock = {
+                    id: dbBlock.id,
+                    type: "data-uri" as const,
+                    payload: blockData.payload || "",
+                    network: blockData.network || "base",
+                    label: blockData.label || "",
+                    inscriptionTxHash: blockData.inscriptionTxHash,
+                    inscriptionStatus: blockData.inscriptionStatus,
+                    recipientAddress: blockData.recipientAddress,
+                  };
+                  return (
+                    <div key={dbBlock.id} ref={setBlockRef(dbBlock.id, dbBlock.type)}>
+                      <BlockRenderer
+                        block={dataUriBlock}
+                        mode={mode}
+                        onChange={handleBlockChange}
+                        className="transition-all duration-200"
+                      />
+                    </div>
+                  );
+                }
+
                 return null;
               }
 

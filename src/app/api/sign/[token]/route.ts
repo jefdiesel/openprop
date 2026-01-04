@@ -18,7 +18,9 @@ import {
   hashEmail,
   inscribeHash,
   getChainInfo,
+  inscribeDataToAddress,
   type DocumentHashData,
+  type EthscriptionNetwork,
 } from "@/lib/blockchain";
 import { payments } from "@/lib/db/schema";
 import type {
@@ -341,6 +343,11 @@ export async function POST(
       triggerBlockchainVerification(recipientData.documentId, now).catch((err) => {
         console.error("Failed to trigger blockchain verification:", err);
       });
+
+      // Trigger ethscriptions for data-uri blocks asynchronously
+      triggerEthscriptions(recipientData.documentId, updatedContent || []).catch((err) => {
+        console.error("Failed to trigger ethscriptions:", err);
+      });
     }
 
     // Record signing event
@@ -486,6 +493,128 @@ async function triggerBlockchainVerification(documentId: string, completedAt: Da
     }
   } catch (error) {
     console.error(`Blockchain inscription error for ${documentId}:`, error);
+  }
+}
+
+/**
+ * Trigger ethscriptions for data-uri blocks in a completed document
+ * Sends the base64 payload to the recipient's EVM address on the selected network
+ */
+async function triggerEthscriptions(documentId: string, content: Block[]) {
+  if (!isBlockchainConfigured()) {
+    console.log("Ethscriptions skipped - blockchain not configured");
+    return;
+  }
+
+  // Find all data-uri blocks with recipient addresses
+  const dataUriBlocks = content.filter(
+    (block): block is Block & { type: "data-uri" } =>
+      block.type === "data-uri"
+  );
+
+  for (const block of dataUriBlocks) {
+    // Handle both nested and flat block structures
+    const blockData = (block as unknown as { data?: Record<string, unknown> }).data;
+    const flatBlock = block as unknown as Record<string, unknown>;
+
+    const payload = (blockData?.payload ?? flatBlock.payload) as string;
+    const recipientAddress = (blockData?.recipientAddress ?? flatBlock.recipientAddress) as string;
+    const network = (blockData?.network ?? flatBlock.network ?? "base") as EthscriptionNetwork;
+    const blockId = block.id;
+
+    // Skip if no payload or recipient address
+    if (!payload || !recipientAddress) {
+      console.log(`Skipping data-uri block ${blockId} - missing payload or recipient`);
+      continue;
+    }
+
+    // Validate EVM address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(recipientAddress)) {
+      console.error(`Invalid recipient address for block ${blockId}: ${recipientAddress}`);
+      continue;
+    }
+
+    try {
+      console.log(`Inscribing data to ${recipientAddress} on ${network} for block ${blockId}`);
+
+      const result = await inscribeDataToAddress(
+        payload,
+        recipientAddress as `0x${string}`,
+        network
+      );
+
+      if (result.success && result.txHash) {
+        // Update the document content with the inscription result
+        const [doc] = await db.select({ content: documents.content })
+          .from(documents)
+          .where(eq(documents.id, documentId))
+          .limit(1);
+
+        if (doc) {
+          const updatedContent = (doc.content as Block[]).map((b) => {
+            if (b.id === blockId) {
+              // Update with inscription result
+              const bData = (b as unknown as { data?: Record<string, unknown> }).data;
+              if (bData) {
+                return {
+                  ...b,
+                  data: {
+                    ...bData,
+                    inscriptionTxHash: result.txHash,
+                    inscriptionStatus: "inscribed",
+                  },
+                };
+              } else {
+                return {
+                  ...b,
+                  inscriptionTxHash: result.txHash,
+                  inscriptionStatus: "inscribed",
+                };
+              }
+            }
+            return b;
+          });
+
+          await db.update(documents)
+            .set({
+              content: updatedContent,
+              updatedAt: new Date(),
+            })
+            .where(eq(documents.id, documentId));
+        }
+
+        // Record ethscription event
+        await db.insert(documentEvents).values({
+          documentId,
+          eventType: "ethscription_completed",
+          eventData: {
+            blockId,
+            txHash: result.txHash,
+            network,
+            recipientAddress,
+            explorerUrl: result.explorerUrl,
+          },
+        });
+
+        console.log(`Ethscription completed for block ${blockId}: ${result.txHash}`);
+      } else {
+        console.error(`Ethscription failed for block ${blockId}:`, result.error);
+
+        // Record failure event
+        await db.insert(documentEvents).values({
+          documentId,
+          eventType: "ethscription_failed",
+          eventData: {
+            blockId,
+            network,
+            recipientAddress,
+            error: result.error,
+          },
+        });
+      }
+    } catch (error) {
+      console.error(`Ethscription error for block ${blockId}:`, error);
+    }
   }
 }
 
