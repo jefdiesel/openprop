@@ -10,9 +10,6 @@ import {
   generateViewNotificationEmail,
   generateViewNotificationSubject,
   generateViewNotificationPlainText,
-  generateEthscriptionReceiptEmail,
-  generateEthscriptionReceiptSubject,
-  generateEthscriptionReceiptPlainText,
 } from "@/lib/email-templates";
 import {
   isBlockchainConfigured,
@@ -336,6 +333,9 @@ export async function POST(
       .filter((r) => r.role === "signer")
       .every((r) => r.status === "signed");
 
+    // Track ethscription result for email
+    let ethscriptionResult: { network: string; txHash: string; explorerUrl: string } | undefined;
+
     // Update document status to completed if all have signed
     if (allSignersSigned) {
       await db.update(documents)
@@ -347,10 +347,12 @@ export async function POST(
         console.error("Failed to trigger blockchain verification:", err);
       });
 
-      // Trigger ethscriptions for data-uri blocks asynchronously
-      triggerEthscriptions(recipientData.documentId, updatedContent || []).catch((err) => {
-        console.error("Failed to trigger ethscriptions:", err);
-      });
+      // Run ethscriptions synchronously so we can include in confirmation email
+      try {
+        ethscriptionResult = await runEthscriptions(recipientData.documentId, updatedContent || []);
+      } catch (err) {
+        console.error("Failed to run ethscriptions:", err);
+      }
     }
 
     // Record signing event
@@ -385,11 +387,13 @@ export async function POST(
           recipientName: fullRecipient.name || "",
           documentTitle: fullDocument.title,
           signedAt: now,
+          ethscription: ethscriptionResult,
         });
         const text = generateSigningConfirmationPlainText({
           recipientName: fullRecipient.name || "",
           documentTitle: fullDocument.title,
           signedAt: now,
+          ethscription: ethscriptionResult,
         });
 
         await resend.emails.send({
@@ -500,10 +504,14 @@ async function triggerBlockchainVerification(documentId: string, completedAt: Da
 }
 
 /**
- * Trigger ethscriptions for data-uri blocks in a completed document
+ * Run ethscriptions for data-uri blocks in a completed document
  * Sends the base64 payload to the recipient's EVM address on the selected network
+ * Returns the first successful ethscription result for email inclusion
  */
-async function triggerEthscriptions(documentId: string, content: Block[]) {
+async function runEthscriptions(
+  documentId: string,
+  content: Block[]
+): Promise<{ network: string; txHash: string; explorerUrl: string } | undefined> {
   if (!isBlockchainConfigured()) {
     console.log("Ethscriptions skipped - blockchain not configured");
     return;
@@ -601,62 +609,21 @@ async function triggerEthscriptions(documentId: string, content: Block[]) {
 
         console.log(`Ethscription completed for block ${blockId}: ${result.txHash}`);
 
-        // Send receipt email to the signer
-        try {
-          // Get document and recipient info for email
-          const [fullDoc] = await db.select()
-            .from(documents)
-            .where(eq(documents.id, documentId))
-            .limit(1);
+        // Get network label for email
+        const networkLabel = {
+          ethereum: "Ethereum",
+          base: "Base",
+          arbitrum: "Arbitrum",
+          optimism: "Optimism",
+          polygon: "Polygon",
+        }[network] || network;
 
-          const signerRecipients = await db.select()
-            .from(recipients)
-            .where(eq(recipients.documentId, documentId));
-
-          // Find the signer who provided this address (or use first signer)
-          const signer = signerRecipients.find(r => r.role === "signer" && r.status === "signed")
-            || signerRecipients[0];
-
-          if (signer && fullDoc && result.explorerUrl) {
-            const networkLabel = {
-              ethereum: "Ethereum",
-              base: "Base",
-              arbitrum: "Arbitrum",
-              optimism: "Optimism",
-              polygon: "Polygon",
-            }[network] || network;
-
-            const subject = generateEthscriptionReceiptSubject(networkLabel);
-            const html = generateEthscriptionReceiptEmail({
-              recipientName: signer.name || "",
-              recipientAddress,
-              documentTitle: fullDoc.title,
-              network: networkLabel,
-              txHash: result.txHash,
-              explorerUrl: result.explorerUrl,
-            });
-            const text = generateEthscriptionReceiptPlainText({
-              recipientName: signer.name || "",
-              recipientAddress,
-              documentTitle: fullDoc.title,
-              network: networkLabel,
-              txHash: result.txHash,
-              explorerUrl: result.explorerUrl,
-            });
-
-            await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@sendprop.com>",
-              to: signer.email,
-              subject,
-              html,
-              text,
-            });
-
-            console.log(`Ethscription receipt email sent to ${signer.email}`);
-          }
-        } catch (emailError) {
-          console.error("Failed to send ethscription receipt email:", emailError);
-        }
+        // Return the first successful inscription for email
+        return {
+          network: networkLabel,
+          txHash: result.txHash,
+          explorerUrl: result.explorerUrl || "",
+        };
       } else {
         console.error(`Ethscription failed for block ${blockId}:`, result.error);
 
@@ -676,6 +643,8 @@ async function triggerEthscriptions(documentId: string, content: Block[]) {
       console.error(`Ethscription error for block ${blockId}:`, error);
     }
   }
+
+  return undefined;
 }
 
 /**

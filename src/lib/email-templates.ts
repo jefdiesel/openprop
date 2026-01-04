@@ -181,12 +181,18 @@ interface SigningConfirmationVariables {
   recipientName: string
   documentTitle: string
   signedAt: Date
+  ethscription?: {
+    network: string
+    txHash: string
+    explorerUrl: string
+  }
 }
 
 export function generateSigningConfirmationEmail({
   recipientName,
   documentTitle,
   signedAt,
+  ethscription,
 }: SigningConfirmationVariables): string {
   const displayRecipientName = recipientName || "there"
   const formattedDate = signedAt.toLocaleDateString("en-US", {
@@ -197,6 +203,25 @@ export function generateSigningConfirmationEmail({
     hour: "2-digit",
     minute: "2-digit",
   })
+
+  const ethscriptionSection = ethscription ? `
+              <!-- Blockchain Card -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 0 0 24px 0;">
+                <tr>
+                  <td style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 20px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px;">
+                      ⛓️ On-Chain Record
+                    </p>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">
+                      Calldata inscribed on ${escapeHtml(ethscription.network)}
+                    </p>
+                    <a href="${escapeHtml(ethscription.explorerUrl)}"
+                       style="display: inline-block; background-color: #7c3aed; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 8px 16px; border-radius: 4px;">
+                      View on Explorer →
+                    </a>
+                  </td>
+                </tr>
+              </table>` : ""
 
   return `
 <!DOCTYPE html>
@@ -214,7 +239,7 @@ export function generateSigningConfirmationEmail({
           <!-- Header -->
           <tr>
             <td style="padding: 24px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">OpenProposal</h1>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">SendProp</h1>
             </td>
           </tr>
 
@@ -250,6 +275,8 @@ export function generateSigningConfirmationEmail({
                 </tr>
               </table>
 
+              ${ethscriptionSection}
+
               <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 24px 0 0 0; text-align: center;">
                 This email serves as confirmation that you have signed the document.
                 Please keep this email for your records.
@@ -261,7 +288,7 @@ export function generateSigningConfirmationEmail({
           <tr>
             <td style="padding: 24px; text-align: center;">
               <p style="margin: 0; font-size: 12px; color: #999;">
-                This email was sent via OpenProposal.
+                This email was sent via SendProp.
               </p>
             </td>
           </tr>
@@ -282,6 +309,7 @@ export function generateSigningConfirmationPlainText({
   recipientName,
   documentTitle,
   signedAt,
+  ethscription,
 }: SigningConfirmationVariables): string {
   const displayRecipientName = recipientName || "there"
   const formattedDate = signedAt.toLocaleDateString("en-US", {
@@ -293,19 +321,23 @@ export function generateSigningConfirmationPlainText({
     minute: "2-digit",
   })
 
+  const ethscriptionSection = ethscription
+    ? `\n\nOn-Chain Record:\nCalldata inscribed on ${ethscription.network}\nView transaction: ${ethscription.explorerUrl}`
+    : ""
+
   return `
 Hi ${displayRecipientName},
 
 Your signature has been successfully recorded.
 
 Document: ${documentTitle}
-Signed on: ${formattedDate}
+Signed on: ${formattedDate}${ethscriptionSection}
 
 This email serves as confirmation that you have signed the document.
 Please keep this email for your records.
 
 ---
-This email was sent via OpenProposal.
+This email was sent via SendProp.
 `.trim()
 }
 
