@@ -27,6 +27,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       ...session,
       user: { ...session.user, id: user.id },
     }),
+    redirect: ({ url, baseUrl }) => {
+      // Allow relative URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allow URLs from the same origin
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
   },
   pages: {
     signIn: "/login",
