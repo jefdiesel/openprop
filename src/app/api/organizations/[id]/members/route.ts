@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { db } from "@/lib/db";
+import { verificationTokens } from "@/lib/db/schema";
+import { v4 as uuidv4 } from "uuid";
 import {
   getOrganizationMembers,
   getOrganizationInvites,
@@ -102,13 +105,29 @@ export async function POST(
       authCheck.userId!
     );
 
-    // Send invite email
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/invite/${invite.token}`;
+    // Create a magic link that authenticates AND redirects to invite accept
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const inviteUrl = `${baseUrl}/invite/${invite.token}`;
     let emailSent = false;
     let emailError: string | null = null;
 
     if (resend && org) {
       try {
+        // Generate a verification token for magic link auth
+        const magicToken = uuidv4();
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        // Store the verification token (NextAuth will consume this)
+        await db.insert(verificationTokens).values({
+          identifier: email.toLowerCase(),
+          token: magicToken,
+          expires,
+        });
+
+        // Build the magic link URL that authenticates and redirects to invite
+        const callbackUrl = encodeURIComponent(`/invite/${invite.token}`);
+        const magicLinkUrl = `${baseUrl}/api/auth/callback/resend?token=${magicToken}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
+
         const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@sendprop.com>";
         await resend.emails.send({
           from: fromEmail,
@@ -119,12 +138,12 @@ export async function POST(
               <h1 style="color: #1a1a1a;">You're invited!</h1>
               <p>You've been invited to join <strong>${org.name}</strong> on SendProp as a ${role}.</p>
               <p>
-                <a href="${inviteUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                <a href="${magicLinkUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                   Accept Invitation
                 </a>
               </p>
               <p style="color: #666; font-size: 14px;">
-                This invitation will expire in 7 days.
+                This link will expire in 24 hours.
               </p>
               <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
               <p style="color: #999; font-size: 12px;">
@@ -144,7 +163,7 @@ export async function POST(
 
     return NextResponse.json({
       invite,
-      inviteUrl, // Return URL so it can be copied manually if email fails
+      inviteUrl, // Fallback URL if email fails
       emailSent,
       emailError,
     }, { status: 201 });
