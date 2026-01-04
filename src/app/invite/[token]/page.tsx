@@ -60,7 +60,7 @@ export default function InviteAcceptPage({
   const handleAccept = async () => {
     if (!session) {
       // Redirect to sign in with return URL
-      router.push(`/login?callbackUrl=/invite/${token}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`)
       return;
     }
 
