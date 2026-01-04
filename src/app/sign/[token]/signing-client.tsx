@@ -263,6 +263,27 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
     };
   }, [content]);
 
+  // Check if data-uri blocks have valid EVM addresses
+  const calldataStats = useMemo(() => {
+    const dataUriBlocks = content.filter((block) => block.type === "data-uri");
+    const blocksWithPayload = dataUriBlocks.filter((block) => {
+      const blockData = (block as any).data || block;
+      const payload = blockData.payload;
+      return payload && payload.length > 0;
+    });
+    const blocksWithAddress = blocksWithPayload.filter((block) => {
+      const blockData = (block as any).data || block;
+      const address = blockData.recipientAddress;
+      return address && /^0x[a-fA-F0-9]{40}$/.test(address);
+    });
+
+    return {
+      total: blocksWithPayload.length,
+      completed: blocksWithAddress.length,
+      allComplete: blocksWithPayload.length === 0 || blocksWithAddress.length >= blocksWithPayload.length,
+    };
+  }, [content]);
+
   // Extract pricing table line items for payment display
   const { pricingLineItems, downPaymentPercent } = useMemo(() => {
     // Find pricing table block
@@ -406,6 +427,14 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
         return;
       }
 
+      // Check if all calldata addresses are complete
+      if (!calldataStats.allComplete) {
+        toast.error("Please enter your wallet address for all calldata fields.");
+        setCurrentStep("sign");
+        setPendingAutoSubmit(false);
+        return;
+      }
+
       setIsSubmitting(true);
 
       try {
@@ -465,7 +494,7 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
     };
 
     doAutoSubmit();
-  }, [pendingAutoSubmit, signatureStats.allRequiredComplete, signatureStats.required, content, token]);
+  }, [pendingAutoSubmit, signatureStats.allRequiredComplete, signatureStats.required, calldataStats.allComplete, content, token]);
 
   // Handle payment error
   const handlePaymentError = useCallback((error: string) => {
@@ -498,6 +527,11 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
   const handleSubmit = useCallback(async () => {
     if (!signatureStats.allRequiredComplete) {
       toast.error("Please complete all required signatures before submitting.");
+      return;
+    }
+
+    if (!calldataStats.allComplete) {
+      toast.error("Please enter your wallet address for all calldata fields.");
       return;
     }
 
@@ -553,7 +587,7 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [token, content, signatureStats.allRequiredComplete, signatureStats.required]);
+  }, [token, content, signatureStats.allRequiredComplete, signatureStats.required, calldataStats.allComplete]);
 
   // Handle decline
   const handleDecline = useCallback(async () => {
