@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google"
 import Resend from "next-auth/providers/resend"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "./db"
-import { users, accounts, sessions, verificationTokens } from "./db/schema"
+import { users, accounts, sessions, verificationTokens, profiles } from "./db/schema"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -40,5 +40,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
     verifyRequest: "/login/verify",
+  },
+  events: {
+    createUser: async ({ user }) => {
+      // Auto-create profile for new users
+      if (user.id) {
+        await db.insert(profiles).values({
+          id: user.id,
+          brandColor: "#000000",
+          stripeAccountEnabled: false,
+        }).onConflictDoNothing();
+      }
+    },
   },
 })
