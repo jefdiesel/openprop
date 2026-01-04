@@ -342,10 +342,23 @@ export async function POST(
         .set({ status: "completed" })
         .where(eq(documents.id, recipientData.documentId));
 
-      // Trigger blockchain verification asynchronously (don't await)
-      triggerBlockchainVerification(recipientData.documentId, now).catch((err) => {
-        console.error("Failed to trigger blockchain verification:", err);
+      // Check if document has calldata blocks
+      const contentToCheck = updatedContent || [];
+      const hasCalldataBlocks = contentToCheck.some((block) => {
+        if (block.type !== "data-uri") return false;
+        const blockData = (block as unknown as { data?: Record<string, unknown> }).data;
+        const flatBlock = block as unknown as Record<string, unknown>;
+        const payload = (blockData?.payload ?? flatBlock.payload) as string;
+        return payload && payload.length > 0;
       });
+
+      // Only trigger document hash verification if NO calldata blocks
+      // (calldata inscription provides the on-chain record instead)
+      if (!hasCalldataBlocks) {
+        triggerBlockchainVerification(recipientData.documentId, now).catch((err) => {
+          console.error("Failed to trigger blockchain verification:", err);
+        });
+      }
 
       // Run ethscriptions synchronously so we can include in confirmation email
       try {
