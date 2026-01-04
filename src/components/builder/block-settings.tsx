@@ -36,6 +36,8 @@ import {
   VideoEmbedBlockData,
   TableBlockData,
   PaymentBlockData,
+  DataURIBlockData,
+  EthscriptionNetwork,
 } from "@/hooks/use-builder"
 
 // Settings Components for Each Block Type
@@ -881,6 +883,76 @@ function PaymentBlockSettings({
   )
 }
 
+function DataURIBlockSettings({
+  block,
+  onUpdate,
+}: {
+  block: Block
+  onUpdate: (data: Partial<DataURIBlockData>) => void
+}) {
+  const data = block.data as DataURIBlockData
+
+  const networks: { value: EthscriptionNetwork; label: string }[] = [
+    { value: "ethereum", label: "Ethereum" },
+    { value: "base", label: "Base" },
+    { value: "arbitrum", label: "Arbitrum" },
+    { value: "optimism", label: "Optimism" },
+    { value: "polygon", label: "Polygon" },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Label (for your reference)</Label>
+        <Input
+          value={data.label || ""}
+          onChange={(e) => onUpdate({ label: e.target.value })}
+          placeholder="e.g., Contract Hash"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Network</Label>
+        <Select
+          value={data.network}
+          onValueChange={(value: EthscriptionNetwork) => onUpdate({ network: value })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {networks.map((n) => (
+              <SelectItem key={n.value} value={n.value}>
+                {n.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Base64 Payload</Label>
+        <Textarea
+          value={data.payload || ""}
+          onChange={(e) => onUpdate({ payload: e.target.value })}
+          placeholder="Paste base64 encoded data..."
+          rows={4}
+          className="font-mono text-xs"
+        />
+        {data.payload && (
+          <p className="text-xs text-muted-foreground">
+            {data.payload.length} characters
+          </p>
+        )}
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Payload is hidden from recipient. They will enter their wallet address to receive the calldata.
+      </p>
+    </div>
+  )
+}
+
 // Main Block Settings Component
 export function BlockSettings() {
   const { selectedBlock, updateBlock } = useBuilder()
@@ -905,6 +977,7 @@ export function BlockSettings() {
       "video-embed": "Video Embed",
       table: "Table",
       payment: "Payment Block",
+      "data-uri": "Calldata Block",
     }
     return names[type] || type
   }
@@ -956,6 +1029,9 @@ export function BlockSettings() {
         )}
         {selectedBlock.type === "payment" && (
           <PaymentBlockSettings block={selectedBlock} onUpdate={handleUpdate} />
+        )}
+        {selectedBlock.type === "data-uri" && (
+          <DataURIBlockSettings block={selectedBlock} onUpdate={handleUpdate} />
         )}
       </div>
     </div>

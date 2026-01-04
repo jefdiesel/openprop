@@ -26,7 +26,9 @@ import {
   VideoEmbedBlockData,
   TableBlockData,
   PaymentBlockData,
+  DataURIBlockData,
 } from "@/hooks/use-builder"
+import { FileCode2 } from "lucide-react"
 
 // Block Renderers
 function TextBlockRenderer({
@@ -501,6 +503,41 @@ function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
   )
 }
 
+// DataURI Block Renderer (for builder canvas)
+function DataURIBlockRenderer({
+  data,
+}: {
+  data: DataURIBlockData
+}) {
+  const networkLabels: Record<string, string> = {
+    ethereum: "Ethereum",
+    base: "Base",
+    arbitrum: "Arbitrum",
+    optimism: "Optimism",
+    polygon: "Polygon",
+  }
+
+  return (
+    <div className="rounded-lg border-2 border-dashed border-purple-300 bg-purple-50 dark:bg-purple-950/30 p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/50">
+          <FileCode2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        </div>
+        <div className="flex-1">
+          <h4 className="font-semibold text-purple-700 dark:text-purple-300">Calldata Block</h4>
+          {data.label && (
+            <p className="text-sm text-purple-600/70 dark:text-purple-400/70">{data.label}</p>
+          )}
+          <div className="mt-2 flex items-center gap-3 text-xs text-purple-600/80 dark:text-purple-400/80">
+            <span>Network: {networkLabels[data.network] || data.network}</span>
+            {data.payload && <span>Payload: {data.payload.length} chars</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Block Renderer Component
 function BlockRenderer({
   block,
@@ -530,6 +567,8 @@ function BlockRenderer({
       return <TableBlockRenderer data={block.data as TableBlockData} />
     case "payment":
       return <PaymentBlockRenderer data={block.data as PaymentBlockData} />
+    case "data-uri":
+      return <DataURIBlockRenderer data={block.data as DataURIBlockData} />
     default:
       return <div>Unknown block type</div>
   }
