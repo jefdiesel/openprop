@@ -35,7 +35,9 @@ export function DataURIBlock({
   onChange,
 }: BlockComponentProps<DataURIBlockData>) {
   const [evmAddress, setEvmAddress] = useState(block.recipientAddress || "");
-  const [isValidAddress, setIsValidAddress] = useState(false);
+  const [isValidAddress, setIsValidAddress] = useState(() =>
+    /^0x[a-fA-F0-9]{40}$/.test(block.recipientAddress || "")
+  );
 
   const validateEvmAddress = (address: string) => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);

@@ -515,6 +515,21 @@ export function SigningClient({ token, initialDocument }: SigningClientProps) {
               signedAt: updatedBlock.signedAt,
             } as DbBlock;
           }
+          // Handle data-uri blocks - update nested data property if it exists
+          if (block.type === "data-uri" && updatedBlock.type === "data-uri") {
+            const hasDataProp = (block as any).data !== undefined;
+            if (hasDataProp) {
+              return {
+                ...block,
+                data: {
+                  ...(block as any).data,
+                  recipientAddress: (updatedBlock as any).recipientAddress,
+                },
+              } as DbBlock;
+            }
+            // Flat structure - just merge
+            return { ...block, ...updatedBlock } as DbBlock;
+          }
           // For other block types, just return the updated block
           return { ...block, ...updatedBlock } as DbBlock;
         }
