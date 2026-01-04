@@ -11,6 +11,7 @@ import {
   Video,
   Table,
   CreditCard,
+  FileCode2,
   LucideIcon,
 } from "lucide-react"
 
@@ -38,6 +39,7 @@ const blockTypes: BlockPaletteItem[] = [
   { type: "table", label: "Table", icon: Table, description: "Data table" },
   { type: "payment", label: "Payment", icon: CreditCard, description: "Collect payment" },
   { type: "signature", label: "Signature", icon: PenTool, description: "Signature field" },
+  { type: "data-uri", label: "Ethscription", icon: FileCode2, description: "On-chain data inscription" },
   { type: "divider", label: "Divider", icon: Minus, description: "Horizontal line" },
   { type: "spacer", label: "Spacer", icon: Square, description: "Vertical spacing" },
 ]

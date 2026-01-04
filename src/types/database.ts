@@ -93,7 +93,11 @@ export type BlockType =
   | 'spacer'
   | 'page-break'
   | 'pricing-table'
-  | 'payment';
+  | 'payment'
+  | 'data-uri';
+
+// Supported networks for ethscriptions
+export type EthscriptionNetwork = 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'polygon';
 
 // Base block interface
 export interface BaseBlock {
@@ -232,6 +236,17 @@ export interface PaymentBlock extends BaseBlock {
   status?: PaymentStatus;
 }
 
+// Data URI block for ethscriptions
+export interface DataURIBlock extends BaseBlock {
+  type: 'data-uri';
+  payload: string; // Base64 encoded data (hidden from recipient)
+  network: EthscriptionNetwork;
+  label?: string; // Optional label shown to creator
+  inscriptionTxHash?: string; // Transaction hash after inscription
+  inscriptionStatus?: 'pending' | 'inscribed' | 'failed';
+  recipientAddress?: string; // EVM address entered by recipient
+}
+
 // Union type for all blocks
 export type Block =
   | TextBlock
@@ -246,7 +261,8 @@ export type Block =
   | SpacerBlock
   | PageBreakBlock
   | PricingTableBlock
-  | PaymentBlock;
+  | PaymentBlock
+  | DataURIBlock;
 
 // ==========================================
 // JSONB field types

@@ -15,6 +15,10 @@ export type BlockType =
   | "video-embed"
   | "table"
   | "payment"
+  | "data-uri"
+
+// Supported networks for ethscriptions
+export type EthscriptionNetwork = "ethereum" | "base" | "arbitrum" | "optimism" | "polygon"
 
 // Block Data Types
 export interface TextBlockData {
@@ -89,6 +93,15 @@ export interface PaymentBlockData {
   paidAt?: string
 }
 
+export interface DataURIBlockData {
+  payload: string // Base64 encoded data (hidden from recipient)
+  network: EthscriptionNetwork
+  label?: string // Optional label shown to creator only
+  inscriptionTxHash?: string // Transaction hash after inscription
+  inscriptionStatus?: "pending" | "inscribed" | "failed"
+  recipientAddress?: string // EVM address entered by recipient
+}
+
 export type BlockData =
   | TextBlockData
   | ImageBlockData
@@ -99,6 +112,7 @@ export type BlockData =
   | VideoEmbedBlockData
   | TableBlockData
   | PaymentBlockData
+  | DataURIBlockData
 
 // Block Interface
 export interface Block {
@@ -205,6 +219,12 @@ export function getDefaultBlockData(type: BlockType): BlockData {
         timing: "due_now",
         usePricingTableTotal: true,
         downPaymentPercent: 0, // 0 = full amount due
+      }
+    case "data-uri":
+      return {
+        payload: "",
+        network: "base",
+        label: "",
       }
   }
 }

@@ -9,6 +9,7 @@ import { SpacerBlock } from "./spacer-block";
 import { SignatureBlock } from "./signature-block";
 import { PricingTableBlock } from "./pricing-table-block";
 import { VideoBlock } from "./video-block";
+import { DataURIBlock } from "./data-uri-block";
 import type {
   Block,
   BlockMode,
@@ -19,6 +20,7 @@ import type {
   SignatureBlockData,
   PricingTableBlockData,
   VideoBlockData,
+  DataURIBlockData,
 } from "@/types/blocks";
 
 export interface BlockRendererProps {
@@ -81,6 +83,13 @@ export function BlockRenderer({
 
   const handleVideoChange = useCallback(
     (updatedBlock: VideoBlockData) => {
+      onChange?.(updatedBlock);
+    },
+    [onChange]
+  );
+
+  const handleDataURIChange = useCallback(
+    (updatedBlock: DataURIBlockData) => {
       onChange?.(updatedBlock);
     },
     [onChange]
@@ -152,6 +161,15 @@ export function BlockRenderer({
           />
         );
 
+      case "data-uri":
+        return (
+          <DataURIBlock
+            block={block}
+            mode={mode}
+            onChange={handleDataURIChange}
+          />
+        );
+
       default:
         // Type guard for exhaustive checking
         const _exhaustiveCheck: never = block;
@@ -187,3 +205,4 @@ export { SpacerBlock } from "./spacer-block";
 export { SignatureBlock } from "./signature-block";
 export { PricingTableBlock } from "./pricing-table-block";
 export { VideoBlock } from "./video-block";
+export { DataURIBlock } from "./data-uri-block";

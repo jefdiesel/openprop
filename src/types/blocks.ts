@@ -7,7 +7,11 @@ export type BlockType =
   | "spacer"
   | "signature"
   | "pricing-table"
-  | "video";
+  | "video"
+  | "data-uri";
+
+// Supported networks for ethscriptions
+export type EthscriptionNetwork = "ethereum" | "base" | "arbitrum" | "optimism" | "polygon";
 
 export type TextAlignment = "left" | "center" | "right" | "justify";
 
@@ -99,6 +103,17 @@ export interface VideoBlockData extends BlockBase {
   provider?: "youtube" | "loom" | "vimeo" | "other";
 }
 
+// Data URI Block for Ethscriptions
+export interface DataURIBlockData extends BlockBase {
+  type: "data-uri";
+  payload: string; // Base64 encoded data (hidden from recipient)
+  network: EthscriptionNetwork;
+  label?: string; // Optional label shown to creator only
+  inscriptionTxHash?: string; // Transaction hash after inscription
+  inscriptionStatus?: "pending" | "inscribed" | "failed";
+  recipientAddress?: string; // EVM address entered by recipient
+}
+
 // Union type of all blocks
 export type Block =
   | TextBlockData
@@ -107,7 +122,8 @@ export type Block =
   | SpacerBlockData
   | SignatureBlockData
   | PricingTableBlockData
-  | VideoBlockData;
+  | VideoBlockData
+  | DataURIBlockData;
 
 // Mode for rendering blocks
 export type BlockMode = "edit" | "view" | "sign";
@@ -167,4 +183,11 @@ export const DEFAULT_PRICING_TABLE_BLOCK: Omit<PricingTableBlockData, "id"> = {
 export const DEFAULT_VIDEO_BLOCK: Omit<VideoBlockData, "id"> = {
   type: "video",
   url: "",
+};
+
+export const DEFAULT_DATA_URI_BLOCK: Omit<DataURIBlockData, "id"> = {
+  type: "data-uri",
+  payload: "",
+  network: "base",
+  label: "",
 };
