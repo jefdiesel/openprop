@@ -2,11 +2,11 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Building2, Loader2, CheckCircle, XCircle, AlertCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -182,10 +182,33 @@ export default function InviteAcceptPage({
             </div>
           )}
 
+          {status === "authenticated" && session?.user?.email?.toLowerCase() !== invite?.email?.toLowerCase() && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div className="text-sm text-red-800 dark:text-red-200">
+                  <p className="font-medium">Wrong account</p>
+                  <p className="mt-1 text-red-700 dark:text-red-300">
+                    You're signed in as <strong>{session?.user?.email}</strong>, but this invite was sent to <strong>{invite?.email}</strong>.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => signOut({ callbackUrl: `/invite/${token}` })}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out and switch accounts
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Button
             onClick={handleAccept}
             className="w-full"
-            disabled={isAccepting}
+            disabled={isAccepting || (status === "authenticated" && session?.user?.email?.toLowerCase() !== invite?.email?.toLowerCase())}
           >
             {isAccepting ? (
               <>

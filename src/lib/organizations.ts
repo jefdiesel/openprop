@@ -286,7 +286,11 @@ export async function acceptInvite(token: string, userId: string) {
 
   // Check if already a member
   const [existing] = await db
-    .select({ id: organizationMembers.id })
+    .select({
+      id: organizationMembers.id,
+      role: organizationMembers.role,
+      status: organizationMembers.status,
+    })
     .from(organizationMembers)
     .where(
       and(
@@ -297,15 +301,19 @@ export async function acceptInvite(token: string, userId: string) {
     .limit(1);
 
   if (existing) {
-    // Reactivate if removed
-    await db
-      .update(organizationMembers)
-      .set({
-        status: "active",
-        role: invite.role,
-        joinedAt: new Date(),
-      })
-      .where(eq(organizationMembers.id, existing.id));
+    if (existing.status === "removed") {
+      // Reactivate removed member with invite's role
+      await db
+        .update(organizationMembers)
+        .set({
+          status: "active",
+          role: invite.role,
+          joinedAt: new Date(),
+        })
+        .where(eq(organizationMembers.id, existing.id));
+    }
+    // If already active, don't change their role - they're already a member
+    // Just continue to mark the invite as accepted
   } else {
     // Add as new member
     await db.insert(organizationMembers).values({
