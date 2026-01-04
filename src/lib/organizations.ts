@@ -331,11 +331,19 @@ export async function acceptInvite(token: string, userId: string) {
     .set({ acceptedAt: new Date() })
     .where(eq(organizationInvites.id, invite.id));
 
-  // Set as user's current organization
+  // Set as user's current organization (upsert in case profile doesn't exist)
   await db
-    .update(profiles)
-    .set({ currentOrganizationId: invite.organizationId })
-    .where(eq(profiles.id, userId));
+    .insert(profiles)
+    .values({
+      id: userId,
+      currentOrganizationId: invite.organizationId,
+      brandColor: "#000000",
+      stripeAccountEnabled: false,
+    })
+    .onConflictDoUpdate({
+      target: profiles.id,
+      set: { currentOrganizationId: invite.organizationId },
+    });
 
   return invite;
 }
