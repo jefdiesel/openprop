@@ -39,7 +39,7 @@ const blockTypes: BlockPaletteItem[] = [
   { type: "table", label: "Table", icon: Table, description: "Data table" },
   { type: "payment", label: "Payment", icon: CreditCard, description: "Collect payment" },
   { type: "signature", label: "Signature", icon: PenTool, description: "Signature field" },
-  { type: "data-uri", label: "Ethscription", icon: FileCode2, description: "On-chain data inscription" },
+  { type: "data-uri", label: "Calldata", icon: FileCode2, description: "Base64 payload for calldata" },
   { type: "divider", label: "Divider", icon: Minus, description: "Horizontal line" },
   { type: "spacer", label: "Spacer", icon: Square, description: "Vertical spacing" },
 ]

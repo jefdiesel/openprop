@@ -90,10 +90,10 @@ export function DataURIBlock({
             <FileCode2 className="h-8 w-8 text-purple-500" />
             <div>
               <p className="font-medium text-purple-700 dark:text-purple-300">
-                Ethscription Block
+                Calldata Block
               </p>
               <p className="text-sm text-purple-600/70 dark:text-purple-400/70">
-                Data will be inscribed on-chain when recipient signs
+                Base64 payload sent to recipient address on signing
               </p>
             </div>
           </div>
@@ -205,13 +205,13 @@ export function DataURIBlock({
         <div className="flex items-center gap-2 mb-4">
           <FileCode2 className="h-5 w-5 text-purple-500" />
           <Label className="text-base font-medium text-purple-700 dark:text-purple-300">
-            On-Chain Inscription
+            Calldata Delivery
           </Label>
         </div>
 
         <p className="text-sm text-purple-600/80 dark:text-purple-400/80 mb-4">
-          This document includes data that will be inscribed to {NETWORKS.find(n => n.value === block.network)?.label}.
-          Enter your wallet address to receive the inscription.
+          This document includes data that will be sent to your address on {NETWORKS.find(n => n.value === block.network)?.label}.
+          Enter your wallet address to receive it.
         </p>
 
         {block.recipientAddress && isValidAddress ? (

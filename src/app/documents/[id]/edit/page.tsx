@@ -46,7 +46,7 @@ function PaletteItemOverlay({ blockType }: { blockType: BlockType }) {
     "video-embed": "Video",
     table: "Table",
     payment: "Payment",
-    "data-uri": "Ethscription",
+    "data-uri": "Calldata",
   }
   return (
     <div className="rounded-md border bg-background p-4 shadow-lg">

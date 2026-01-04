@@ -48,7 +48,7 @@ function PaletteItemOverlay({ blockType }: { blockType: BlockType }) {
     "video-embed": "Video",
     table: "Table",
     payment: "Payment",
-    "data-uri": "Ethscription",
+    "data-uri": "Calldata",
   }
 
   return (
