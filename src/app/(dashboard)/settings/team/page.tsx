@@ -101,7 +101,7 @@ export default async function TeamSettingsPage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {memberCount}
-                {seatLimit !== null && seatLimit > 0 && (
+                {planId !== "free" && seatLimit !== null && seatLimit > 1 && (
                   <span className="text-sm font-normal text-muted-foreground">
                     /{seatLimit}
                   </span>
@@ -149,7 +149,7 @@ export default async function TeamSettingsPage() {
               <CardTitle>Team Members</CardTitle>
               <CardDescription>
                 {memberCount} member{memberCount !== 1 ? "s" : ""}
-                {seatLimit && seatLimit > 0 && ` of ${seatLimit} seats`}
+                {planId !== "free" && seatLimit && seatLimit > 1 && ` of ${seatLimit} seats`}
               </CardDescription>
             </div>
             {canManage && (
