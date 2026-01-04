@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid"
 import { z } from "zod"
 import { Resend } from "resend"
 import { db } from "@/lib/db"
-import { documents, recipients as recipientsTable, documentEvents } from "@/lib/db/schema"
+import { documents, recipients as recipientsTable, documentEvents, documentVersions } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import {
@@ -40,7 +40,7 @@ const sendDocumentSchema = z.object({
   senderEmail: z.string().email().optional(),
   // Payment collection settings
   paymentEnabled: z.boolean().default(false),
-  paymentTiming: z.enum(["before_signature", "after_signature"]).optional(),
+  paymentTiming: z.enum(["due_now", "net_30", "net_60"]).optional(),
   paymentAmount: z.number().optional(),
   paymentCurrency: z.string().optional(),
 })
@@ -117,6 +117,31 @@ export async function sendDocument(
 
     // Delete any existing recipients for this document
     await db.delete(recipientsTable).where(eq(recipientsTable.documentId, documentId))
+
+    // Get the current session for version tracking
+    const session = await auth()
+    const userId = session?.user?.id
+
+    // Fetch document for version creation
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, documentId))
+      .limit(1)
+
+    // Create version snapshot when document is sent
+    if (document && userId) {
+      await db.insert(documentVersions).values({
+        documentId,
+        versionNumber: document.currentVersion || 1,
+        title: document.title,
+        content: document.content as unknown[],
+        variables: document.variables as Record<string, unknown> | undefined,
+        changeType: 'sent',
+        changeDescription: 'Document sent to recipients',
+        createdBy: userId,
+      })
+    }
 
     // Save recipient records to database
     const dbRecipients = recipientRecords.map((r) => ({

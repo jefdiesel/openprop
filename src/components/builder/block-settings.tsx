@@ -785,6 +785,35 @@ function PaymentBlockSettings({
         </p>
       </div>
 
+      {data.usePricingTableTotal && (
+        <>
+          <Separator />
+
+          <div className="space-y-2">
+            <Label>Down Payment %</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={data.downPaymentPercent || ""}
+                onChange={(e) =>
+                  onUpdate({ downPaymentPercent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })
+                }
+                placeholder="0"
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data.downPaymentPercent && data.downPaymentPercent > 0
+                ? `Collect ${data.downPaymentPercent}% of total now, remainder due later`
+                : "Leave empty or 0 for full amount"}
+            </p>
+          </div>
+        </>
+      )}
+
       {!data.usePricingTableTotal && (
         <>
           <Separator />
@@ -826,10 +855,10 @@ function PaymentBlockSettings({
       <Separator />
 
       <div className="space-y-2">
-        <Label>Payment Timing</Label>
+        <Label>Payment Terms</Label>
         <Select
           value={data.timing}
-          onValueChange={(value: "before_signature" | "after_signature") =>
+          onValueChange={(value: "due_now" | "net_30" | "net_60") =>
             onUpdate({ timing: value })
           }
         >
@@ -837,14 +866,15 @@ function PaymentBlockSettings({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="before_signature">Before signing</SelectItem>
-            <SelectItem value="after_signature">After signing</SelectItem>
+            <SelectItem value="due_now">Due Now</SelectItem>
+            <SelectItem value="net_30">Net 30</SelectItem>
+            <SelectItem value="net_60">Net 60</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          {data.timing === "before_signature"
+          {data.timing === "due_now"
             ? "Recipient must pay before they can sign"
-            : "Payment will be collected after signing is complete"}
+            : `Payment due within ${data.timing === "net_30" ? "30" : "60"} days`}
         </p>
       </div>
     </div>

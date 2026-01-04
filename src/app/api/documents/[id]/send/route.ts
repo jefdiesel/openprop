@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { db } from '@/lib/db'
-import { documents, recipients, documentEvents, users, profiles } from '@/lib/db/schema'
+import { documents, recipients, documentEvents, users, profiles, documentVersions } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { eq, and } from 'drizzle-orm'
 import * as z from 'zod'
@@ -139,6 +139,18 @@ export async function POST(
       })
       .where(eq(documents.id, id))
       .returning()
+
+    // Create initial version snapshot when document is first sent
+    await db.insert(documentVersions).values({
+      documentId: id,
+      versionNumber: document.currentVersion || 1,
+      title: document.title,
+      content: document.content as unknown[],
+      variables: document.variables as Record<string, unknown> | undefined,
+      changeType: 'sent',
+      changeDescription: 'Document sent to recipients',
+      createdBy: userId,
+    })
 
     // Create document event for sending
     await db.insert(documentEvents).values({

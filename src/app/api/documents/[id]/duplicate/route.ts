@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { documents, documentEvents } from '@/lib/db/schema'
+import { documents, documentEvents, profiles } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, or } from 'drizzle-orm'
 import * as z from 'zod'
 
 // Schema for duplicating a document
@@ -31,6 +31,13 @@ export async function POST(
       )
     }
 
+    // Get user's current organization context
+    const [profile] = await db
+      .select({ currentOrganizationId: profiles.currentOrganizationId })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1)
+
     // Parse request body (optional)
     let newTitle: string | undefined
     try {
@@ -43,10 +50,17 @@ export async function POST(
       // Body is optional, ignore parsing errors
     }
 
-    // Fetch original document
+    // Fetch original document (user's own or team's)
+    const ownerCondition = profile?.currentOrganizationId
+      ? or(
+          eq(documents.userId, userId),
+          eq(documents.organizationId, profile.currentOrganizationId)
+        )
+      : eq(documents.userId, userId)
+
     const [originalDoc] = await db.select()
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(and(eq(documents.id, id), ownerCondition))
       .limit(1)
 
     if (!originalDoc) {
@@ -56,10 +70,11 @@ export async function POST(
       )
     }
 
-    // Create duplicate document
+    // Create duplicate document (in team context if applicable)
     const [duplicatedDoc] = await db.insert(documents)
       .values({
         userId,
+        organizationId: profile?.currentOrganizationId || null,
         title: newTitle || `${originalDoc.title} (Copy)`,
         content: originalDoc.content,
         status: 'draft',

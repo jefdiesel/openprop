@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 
 type DocumentStatus = "draft" | "sent" | "viewed" | "signed" | "completed" | "expired" | "declined";
+type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded" | null;
 
 interface Document {
   id: string;
@@ -35,6 +36,9 @@ interface Document {
   recipient: { name: string; email: string };
   createdAt: Date;
   updatedAt: Date;
+  lockedAt: Date | null;
+  paymentStatus?: PaymentStatus;
+  paymentAmount?: number | null;
 }
 
 interface DocumentsClientProps {
@@ -60,6 +64,37 @@ const statusColors: Record<DocumentStatus, string> = {
   expired: "bg-red-100 text-red-800",
   declined: "bg-red-100 text-red-800",
 };
+
+// Format relative time
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+// Get activity label based on status
+function getActivityLabel(status: DocumentStatus): string {
+  switch (status) {
+    case "draft": return "Edited";
+    case "sent": return "Sent";
+    case "viewed": return "Viewed";
+    case "signed": return "Signed";
+    case "completed": return "Completed";
+    case "expired": return "Expired";
+    case "declined": return "Declined";
+    default: return "Updated";
+  }
+}
 
 export function DocumentsClient({ documents, statusCounts }: DocumentsClientProps) {
   const router = useRouter();
@@ -151,7 +186,7 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
                     <TableHead>Document</TableHead>
                     <TableHead>Recipient</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Activity</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -183,12 +218,25 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={statusColors[doc.status]}>
-                          {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className={statusColors[doc.status]}>
+                            {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                          </Badge>
+                          {doc.paymentStatus === "succeeded" && (
+                            <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200">
+                              Paid {doc.paymentAmount ? `$${(doc.paymentAmount / 100).toFixed(2)}` : ""}
+                            </Badge>
+                          )}
+                          {(doc.status === "sent" || doc.status === "viewed") && !doc.lockedAt && (
+                            <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
+                              Editable
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {doc.updatedAt.toLocaleDateString()}
+                        <span className="font-medium text-foreground">{getActivityLabel(doc.status)}</span>{" "}
+                        {formatRelativeTime(doc.updatedAt)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -206,12 +254,22 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
                                 </Link>
                               </DropdownMenuItem>
                             ) : (
-                              <DropdownMenuItem asChild>
-                                <Link href={`/documents/${doc.id}`}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </Link>
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/documents/${doc.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View
+                                  </Link>
+                                </DropdownMenuItem>
+                                {(doc.status === "sent" || doc.status === "viewed") && !doc.lockedAt && (
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/documents/${doc.id}/edit`}>
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </Link>
+                                  </DropdownMenuItem>
+                                )}
+                              </>
                             )}
                             <DropdownMenuItem onClick={() => handleDuplicate(doc.id)}>
                               <Copy className="mr-2 h-4 w-4" />

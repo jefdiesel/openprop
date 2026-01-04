@@ -379,6 +379,25 @@ function StripeConnectContent() {
                 </>
               )}
             </Button>
+
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-4">
+              <strong>Note:</strong> Stripe&apos;s verification process may not request all information upfront.
+              If you&apos;ve already submitted details, click Continue Setup to see if additional information
+              is now required. ID verification and full SSN are sometimes requested in later steps, not during
+              the initial setup.
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Having trouble?{" "}
+              <a
+                href="https://dashboard.stripe.com/express"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+              >
+                Manage your account directly on Stripe
+              </a>
+            </p>
           </CardContent>
         </Card>
       )}

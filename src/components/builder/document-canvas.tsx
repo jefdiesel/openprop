@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, useRef } from "react"
+import React, { useCallback, useState, useRef, useMemo } from "react"
 import {
   useDroppable,
 } from "@dnd-kit/core"
@@ -38,32 +38,72 @@ function TextBlockRenderer({
   onUpdate?: (data: Partial<TextBlockData>) => void
   isSelected?: boolean
 }) {
+  const [isFocused, setIsFocused] = useState(false)
+  const [localContent, setLocalContent] = useState(data.content)
+  const divRef = useRef<HTMLDivElement>(null)
+
+  // Sync local content with data when it changes externally
+  React.useEffect(() => {
+    setLocalContent(data.content)
+  }, [data.content])
+
   const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerText
+    setLocalContent(content)
+  }, [])
+
+  const handleBlur = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+    const content = e.currentTarget.innerText
+    setIsFocused(false)
+    setLocalContent(content)
     onUpdate?.({ content })
   }, [onUpdate])
 
-  const isEmpty = !data.content || data.content.trim() === ""
+  const handleFocus = useCallback(() => {
+    setIsFocused(true)
+  }, [])
+
+  // Prevent keyboard events from bubbling to DndContext (fixes spacebar issue)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation()
+  }, [])
+
+  const showPlaceholder = !localContent?.trim() && !isFocused && onUpdate
 
   return (
-    <div
-      contentEditable={!!onUpdate}
-      suppressContentEditableWarning
-      onBlur={handleInput}
-      data-placeholder="Click to add text..."
-      style={{
-        fontSize: `${data.fontSize}px`,
-        textAlign: data.alignment,
-        color: data.color,
-        fontWeight: data.fontWeight,
-      }}
-      className={cn(
-        "min-h-[24px] whitespace-pre-wrap outline-none relative",
-        onUpdate && "cursor-text focus:ring-1 focus:ring-primary/50 rounded px-1 -mx-1",
-        isEmpty && onUpdate && "before:content-[attr(data-placeholder)] before:text-muted-foreground before:pointer-events-none before:absolute"
+    <div className="relative">
+      {showPlaceholder && (
+        <div
+          className="absolute inset-0 text-muted-foreground pointer-events-none px-1"
+          style={{
+            fontSize: `${data.fontSize}px`,
+            textAlign: data.alignment,
+          }}
+        >
+          Click to add text...
+        </div>
       )}
-    >
-      {data.content}
+      <div
+        ref={divRef}
+        contentEditable={!!onUpdate}
+        suppressContentEditableWarning
+        onInput={handleInput}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        style={{
+          fontSize: `${data.fontSize}px`,
+          textAlign: data.alignment,
+          color: data.color,
+          fontWeight: data.fontWeight,
+        }}
+        className={cn(
+          "min-h-[24px] whitespace-pre-wrap outline-none",
+          onUpdate && "cursor-text focus:ring-1 focus:ring-primary/50 rounded px-1 -mx-1"
+        )}
+      >
+        {data.content}
+      </div>
     </div>
   )
 }
@@ -377,6 +417,7 @@ function TableBlockRenderer({ data }: { data: TableBlockData }) {
 }
 
 function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
+  const { state } = useBuilder()
   const currencySymbols: Record<string, string> = {
     USD: "$",
     EUR: "€",
@@ -385,6 +426,40 @@ function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
     AUD: "A$",
   }
   const symbol = currencySymbols[data.currency] || data.currency
+
+  // Calculate pricing table total if using it
+  const pricingTableTotal = useMemo(() => {
+    if (!data.usePricingTableTotal) return 0
+    const pricingBlock = state.blocks.find((b) => b.type === "pricing-table")
+    if (!pricingBlock) return 0
+    const pricingData = pricingBlock.data as PricingTableBlockData
+    return pricingData.items.reduce(
+      (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
+      0
+    )
+  }, [data.usePricingTableTotal, state.blocks])
+
+  // Calculate amount based on down payment percentage (with NaN protection)
+  const safeDownPaymentPercent = useMemo(() => {
+    const raw = data.downPaymentPercent
+    if (raw === undefined || raw === null) return 0
+    const parsed = typeof raw === 'string' ? parseFloat(raw) : Number(raw)
+    return Number.isFinite(parsed) ? parsed : 0
+  }, [data.downPaymentPercent])
+
+  const displayAmount = useMemo(() => {
+    if (data.usePricingTableTotal) {
+      if (safeDownPaymentPercent > 0 && safeDownPaymentPercent < 100) {
+        return pricingTableTotal * (safeDownPaymentPercent / 100)
+      }
+      return pricingTableTotal
+    }
+    return data.amount || 0
+  }, [data.usePricingTableTotal, safeDownPaymentPercent, data.amount, pricingTableTotal])
+
+  const downPaymentLabel = safeDownPaymentPercent > 0 && safeDownPaymentPercent < 100
+    ? `${safeDownPaymentPercent}% down`
+    : null
 
   return (
     <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
@@ -397,23 +472,19 @@ function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
           <p className="text-sm text-muted-foreground">{data.description}</p>
 
           <div className="mt-3 flex flex-wrap items-center gap-4">
-            {data.usePricingTableTotal ? (
-              <div className="flex items-center gap-1.5 text-sm">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Amount from pricing table</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-bold text-primary">
-                  {symbol}{data.amount.toFixed(2)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl font-bold text-primary">
+                {symbol}{displayAmount.toFixed(2)}
+              </span>
+              {downPaymentLabel && (
+                <span className="text-sm text-muted-foreground">({downPaymentLabel})</span>
+              )}
+            </div>
 
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>
-                {data.timing === "before_signature" ? "Required before signing" : "Collected after signing"}
+                {data.timing === "due_now" ? "Due Now" : data.timing === "net_30" ? "Net 30" : "Net 60"}
               </span>
             </div>
           </div>
@@ -582,6 +653,64 @@ function EmptyCanvasDropZone() {
   )
 }
 
+// Editable Document Title Component
+function DocumentTitle() {
+  const { state, setTitle } = useBuilder()
+  const [isEditing, setIsEditing] = useState(false)
+  const [localTitle, setLocalTitle] = useState(state.documentTitle)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    setLocalTitle(state.documentTitle)
+  }, [state.documentTitle])
+
+  React.useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditing])
+
+  const handleSubmit = useCallback(() => {
+    setTitle(localTitle.trim() || "Untitled Document")
+    setIsEditing(false)
+  }, [localTitle, setTitle])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation()
+    if (e.key === "Enter") {
+      handleSubmit()
+    } else if (e.key === "Escape") {
+      setLocalTitle(state.documentTitle)
+      setIsEditing(false)
+    }
+  }, [handleSubmit, state.documentTitle])
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={localTitle}
+        onChange={(e) => setLocalTitle(e.target.value)}
+        onBlur={handleSubmit}
+        onKeyDown={handleKeyDown}
+        className="w-full text-3xl font-bold bg-transparent border-b-2 border-primary/50 outline-none pb-2 mb-6"
+        placeholder="Document Title"
+      />
+    )
+  }
+
+  return (
+    <h1
+      onClick={() => setIsEditing(true)}
+      className="text-3xl font-bold mb-6 pb-2 border-b border-transparent hover:border-muted-foreground/20 cursor-text transition-colors"
+    >
+      {state.documentTitle || "Untitled Document"}
+    </h1>
+  )
+}
+
 // Main Canvas Component
 export function DocumentCanvas() {
   const { state, selectBlock, removeBlock, updateBlock } = useBuilder()
@@ -598,6 +727,9 @@ export function DocumentCanvas() {
       <div className="mx-auto max-w-3xl">
         {/* Document Paper */}
         <div className="min-h-[800px] rounded-lg border bg-background p-8 shadow-sm">
+          {/* Document Title */}
+          <DocumentTitle />
+
           {state.blocks.length === 0 ? (
             <EmptyCanvasDropZone />
           ) : (

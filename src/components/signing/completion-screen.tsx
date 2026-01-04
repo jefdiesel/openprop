@@ -10,6 +10,7 @@ import {
   FileText,
   Mail,
   Share2,
+  CreditCard,
 } from "lucide-react";
 
 interface CompletionScreenProps {
@@ -21,6 +22,10 @@ interface CompletionScreenProps {
   downloadUrl?: string;
   showConfetti?: boolean;
   className?: string;
+  // Payment info
+  paymentCollected?: boolean;
+  paymentAmount?: number;
+  paymentCurrency?: string;
 }
 
 // Simple confetti effect
@@ -105,6 +110,9 @@ export function CompletionScreen({
   downloadUrl,
   showConfetti = true,
   className,
+  paymentCollected = false,
+  paymentAmount,
+  paymentCurrency = "USD",
 }: CompletionScreenProps) {
   const [showConfettiAnimation, setShowConfettiAnimation] = useState(false);
 
@@ -150,10 +158,12 @@ export function CompletionScreen({
         {/* Success message */}
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Document Signed!
+            {paymentCollected ? "Document Signed & Payment Complete!" : "Document Signed!"}
           </h1>
           <p className="text-muted-foreground">
-            Your signature has been successfully recorded.
+            {paymentCollected
+              ? "Your signature and payment have been successfully recorded."
+              : "Your signature has been successfully recorded."}
           </p>
         </div>
 
@@ -168,14 +178,29 @@ export function CompletionScreen({
                 {documentTitle}
               </h2>
               <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  <span className="truncate">{recipientEmail}</span>
-                </div>
+                {recipientEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="truncate">{recipientEmail}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
                   <span>Signed on {formattedDate}</span>
                 </div>
+                {paymentCollected && paymentAmount && paymentAmount > 0 && (
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-green-500" />
+                    <span>
+                      Payment of{" "}
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: paymentCurrency,
+                      }).format(paymentAmount)}{" "}
+                      collected
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

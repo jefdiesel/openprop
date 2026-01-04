@@ -122,19 +122,32 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
     checkStripeStatus()
   }, [])
 
-  // Calculate if document has a pricing table and its total
+  // Calculate if document has a pricing table or payment block and its total
   const { hasPricingTable, pricingTableTotal } = useMemo(() => {
+    // First check for pricing-table block
     const pricingBlock = state.blocks.find((b) => b.type === "pricing-table")
-    if (!pricingBlock) {
-      return { hasPricingTable: false, pricingTableTotal: 0 }
+    if (pricingBlock) {
+      // Handle both flat (types/blocks.ts) and nested (use-builder) structures
+      const blockAny = pricingBlock as unknown as Record<string, unknown>
+      const dataItems = (pricingBlock.data as { items?: Array<{ quantity: number; unitPrice: number }> })?.items
+      const flatItems = blockAny.items as Array<{ quantity: number; unitPrice: number }> | undefined
+      const items = dataItems || flatItems || []
+      const total = items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
+      console.log("Pricing table total calculation:", { dataItems: !!dataItems, flatItems: !!flatItems, itemCount: items.length, total })
+      return { hasPricingTable: true, pricingTableTotal: total }
     }
 
-    // Calculate total from pricing table items - data is in block.data, not settings
-    const data = pricingBlock.data as { items?: Array<{ quantity: number; unitPrice: number }> }
-    const items = data?.items || []
-    const total = items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
+    // Also check for payment block
+    const paymentBlock = state.blocks.find((b) => b.type === "payment")
+    if (paymentBlock) {
+      const blockAny = paymentBlock as unknown as Record<string, unknown>
+      const dataAmount = (paymentBlock.data as { amount?: number })?.amount
+      const flatAmount = blockAny.amount as number | undefined
+      const amount = dataAmount || flatAmount || 0
+      return { hasPricingTable: true, pricingTableTotal: amount }
+    }
 
-    return { hasPricingTable: true, pricingTableTotal: total }
+    return { hasPricingTable: false, pricingTableTotal: 0 }
   }, [state.blocks])
 
   // Load document on mount
@@ -192,8 +205,9 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
   // Handle successful send
   const handleSendSuccess = useCallback(() => {
     toast.success("Document sent successfully!")
-    // Optionally navigate to a confirmation page or refresh
-  }, [])
+    // Navigate to documents dashboard
+    router.push("/documents")
+  }, [router])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

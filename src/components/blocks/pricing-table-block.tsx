@@ -43,15 +43,30 @@ function formatCurrency(amount: number, currency: string): string {
   return `${symbol}${amount.toFixed(2)}`;
 }
 
+interface PricingTableBlockProps extends BlockComponentProps<PricingTableBlockData> {
+  downPaymentPercent?: number; // From payment block - 0-100, 0 = full amount
+}
+
 export function PricingTableBlock({
   block,
   mode,
   onChange,
-}: BlockComponentProps<PricingTableBlockData>) {
+  downPaymentPercent = 0,
+}: PricingTableBlockProps) {
+  // Safe down payment calculation (handles NaN)
+  const safeDownPaymentPercent = useMemo(() => {
+    if (downPaymentPercent === undefined || downPaymentPercent === null) return 0;
+    const parsed = typeof downPaymentPercent === 'string' ? parseFloat(downPaymentPercent as any) : Number(downPaymentPercent);
+    return Number.isFinite(parsed) && parsed > 0 && parsed < 100 ? parsed : 0;
+  }, [downPaymentPercent]);
   // Calculate totals
   const calculations = useMemo(() => {
     const selectedItems = block.items.filter(
-      (item) => !item.isOptional || item.isSelected
+      (item) =>
+        // Must have name or price (not empty placeholder)
+        (item.name || item.unitPrice > 0) &&
+        // Must be selected or not optional
+        (!item.isOptional || item.isSelected)
     );
     const subtotal = selectedItems.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
@@ -163,6 +178,9 @@ export function PricingTableBlock({
 
   // View mode for signers - can toggle optional items
   if (mode === "sign") {
+    // Filter out empty/invalid items for display
+    const validItems = block.items.filter(item => item.name || item.unitPrice > 0);
+
     return (
       <div className="space-y-4">
         <Table>
@@ -176,7 +194,7 @@ export function PricingTableBlock({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {block.items.map((item) => (
+            {validItems.map((item) => (
               <TableRow
                 key={item.id}
                 className={cn(
@@ -275,6 +293,26 @@ export function PricingTableBlock({
                 {formatCurrency(calculations.total, block.currency)}
               </TableCell>
             </TableRow>
+            {safeDownPaymentPercent > 0 && (
+              <>
+                <TableRow className="bg-primary/5">
+                  <TableCell colSpan={4} className="text-right font-semibold text-primary">
+                    {safeDownPaymentPercent}% Down Payment Due Now
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-primary">
+                    {formatCurrency(calculations.total * (safeDownPaymentPercent / 100), block.currency)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={4} className="text-right text-muted-foreground">
+                    Balance Due Later
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatCurrency(calculations.total * (1 - safeDownPaymentPercent / 100), block.currency)}
+                  </TableCell>
+                </TableRow>
+              </>
+            )}
           </TableFooter>
         </Table>
       </div>
@@ -283,6 +321,13 @@ export function PricingTableBlock({
 
   // View mode - read only
   if (mode === "view") {
+    // Filter out empty items and unselected optional items
+    const visibleItems = block.items.filter(
+      (item) =>
+        (item.name || item.unitPrice > 0) &&
+        (!item.isOptional || item.isSelected)
+    );
+
     return (
       <div className="space-y-4">
         <Table>
@@ -295,9 +340,7 @@ export function PricingTableBlock({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {block.items
-              .filter((item) => !item.isOptional || item.isSelected)
-              .map((item) => (
+            {visibleItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <div>
@@ -356,6 +399,26 @@ export function PricingTableBlock({
                 {formatCurrency(calculations.total, block.currency)}
               </TableCell>
             </TableRow>
+            {safeDownPaymentPercent > 0 && (
+              <>
+                <TableRow className="bg-primary/5">
+                  <TableCell colSpan={3} className="text-right font-semibold text-primary">
+                    {safeDownPaymentPercent}% Down Payment Due Now
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-primary">
+                    {formatCurrency(calculations.total * (safeDownPaymentPercent / 100), block.currency)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={3} className="text-right text-muted-foreground">
+                    Balance Due Later
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatCurrency(calculations.total * (1 - safeDownPaymentPercent / 100), block.currency)}
+                  </TableCell>
+                </TableRow>
+              </>
+            )}
           </TableFooter>
         </Table>
       </div>

@@ -329,7 +329,7 @@ export async function refundPayment(
 // ============================================
 
 // Plan types
-export type PlanId = "free" | "pro" | "business";
+export type PlanId = "free" | "pro" | "business" | "pro_team" | "business_team";
 export type AddOnId = "blockchain_audit";
 
 export interface Plan {
@@ -449,6 +449,71 @@ export const PLANS: Record<PlanId, Plan> = {
       "Analytics dashboard",
       "CRM integrations",
       "API access",
+    ],
+    limits: {
+      customBranding: true,
+      removeWatermark: true,
+      workspaces: 10,
+      apiAccess: true,
+      prioritySupport: true,
+      analytics: true,
+      maxSeats: -1, // Unlimited
+      storageGb: 25,
+    },
+  },
+  // Team Plans (for organizations)
+  pro_team: {
+    id: "pro_team",
+    name: "Pro Team",
+    description: "For teams up to 10 members",
+    priceMonthly: 2900, // $29/mo
+    priceYearly: 29000, // $290/yr (2 months free)
+    earlyBirdPriceMonthly: 1500,
+    earlyBirdPriceYearly: 15000,
+    stripePriceIdMonthly: process.env.STRIPE_PRO_TEAM_MONTHLY_PRICE_ID || null,
+    stripePriceIdYearly: process.env.STRIPE_PRO_TEAM_YEARLY_PRICE_ID || null,
+    earlyBirdPriceIdMonthly: process.env.STRIPE_PRO_TEAM_EARLY_BIRD_MONTHLY_PRICE_ID || null,
+    earlyBirdPriceIdYearly: process.env.STRIPE_PRO_TEAM_EARLY_BIRD_YEARLY_PRICE_ID || null,
+    features: [
+      "Up to 10 team members",
+      "5GB shared storage",
+      "Shared Stripe Connect",
+      "Team document library",
+      "Member permissions",
+      "Priority support",
+    ],
+    limits: {
+      customBranding: true,
+      removeWatermark: false,
+      workspaces: 1,
+      apiAccess: true,
+      prioritySupport: true,
+      analytics: false,
+      maxSeats: 10,
+      storageGb: 5,
+    },
+  },
+  business_team: {
+    id: "business_team",
+    name: "Business Team",
+    description: "Unlimited team members",
+    priceMonthly: 9900, // $99/mo
+    priceYearly: 99000, // $990/yr (2 months free)
+    earlyBirdPriceMonthly: 5000,
+    earlyBirdPriceYearly: 50000,
+    stripePriceIdMonthly: process.env.STRIPE_BUSINESS_TEAM_MONTHLY_PRICE_ID || null,
+    stripePriceIdYearly: process.env.STRIPE_BUSINESS_TEAM_YEARLY_PRICE_ID || null,
+    earlyBirdPriceIdMonthly: process.env.STRIPE_BUSINESS_TEAM_EARLY_BIRD_MONTHLY_PRICE_ID || null,
+    earlyBirdPriceIdYearly: process.env.STRIPE_BUSINESS_TEAM_EARLY_BIRD_YEARLY_PRICE_ID || null,
+    features: [
+      "Unlimited team members",
+      "25GB shared storage",
+      "Shared Stripe Connect",
+      "Remove branding",
+      "Analytics dashboard",
+      "CRM integrations",
+      "API access",
+      "Dedicated support",
     ],
     limits: {
       customBranding: true,
@@ -610,4 +675,79 @@ export async function createBillingPortalSession(
     return_url: returnUrl,
   });
   return session.url;
+}
+
+// ============================================
+// ORGANIZATION/TEAM BILLING
+// ============================================
+
+// Create subscription checkout for an organization
+export async function createOrganizationSubscriptionCheckout({
+  organizationId,
+  organizationName,
+  userId,
+  email,
+  priceId,
+  successUrl,
+  cancelUrl,
+  isEarlyBird = false,
+  seatLimit,
+}: {
+  organizationId: string;
+  organizationName: string;
+  userId: string;
+  email: string;
+  priceId: string;
+  successUrl: string;
+  cancelUrl: string;
+  isEarlyBird?: boolean;
+  seatLimit?: number;
+}): Promise<{ sessionId: string; url: string }> {
+  const s = getStripe();
+
+  const session = await s.checkout.sessions.create({
+    mode: "subscription",
+    customer_email: email,
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      organization_id: organizationId,
+      user_id: userId,
+      is_early_bird: isEarlyBird ? "true" : "false",
+      is_team: "true",
+    },
+    subscription_data: {
+      metadata: {
+        organization_id: organizationId,
+        user_id: userId,
+        is_early_bird: isEarlyBird ? "true" : "false",
+        is_team: "true",
+        seat_limit: seatLimit?.toString() || "",
+      },
+      description: `SendProp Team - ${organizationName}`,
+    },
+    allow_promotion_codes: true,
+  });
+
+  return { sessionId: session.id, url: session.url! };
+}
+
+// Helper to determine if a plan is a team plan
+export function isTeamPlan(planId: PlanId): boolean {
+  return planId === "pro_team" || planId === "business_team";
+}
+
+// Get plan seat limit
+export function getPlanSeatLimit(planId: PlanId): number | null {
+  const plan = PLANS[planId];
+  if (!plan) return null;
+  return plan.limits.maxSeats === -1 ? null : plan.limits.maxSeats;
+}
+
+// Get plan storage limit in GB
+export function getPlanStorageGb(planId: PlanId): number {
+  const plan = PLANS[planId];
+  if (!plan) return 0;
+  return plan.limits.storageGb === -1 ? Infinity : plan.limits.storageGb;
 }

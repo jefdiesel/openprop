@@ -225,7 +225,9 @@ export interface PaymentBlock extends BaseBlock {
   currency: string;
   description?: string;
   required: boolean;
-  timing?: 'before_signature' | 'after_signature';
+  timing?: 'due_now' | 'net_30' | 'net_60';
+  usePricingTableTotal?: boolean;
+  downPaymentPercent?: number; // 0 = full amount, 50 = 50% down, etc.
   paymentIntentId?: string;
   status?: PaymentStatus;
 }

@@ -10,18 +10,25 @@ interface DocumentViewerProps {
   content: DbBlock[];
   title: string;
   onBlockChange?: (blockId: string, block: Block) => void;
+  onBlockView?: (blockId: string, blockType: string, isVisible: boolean) => void;
+  onLinkClick?: (url: string, linkText: string) => void;
   className?: string;
   mode?: "sign" | "view";
+  downPaymentPercent?: number; // From payment block
 }
 
 export function DocumentViewer({
   content,
   title,
   onBlockChange,
+  onBlockView,
+  onLinkClick,
   className,
   mode = "sign",
+  downPaymentPercent,
 }: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const blockRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // Handle scroll progress
@@ -45,6 +52,63 @@ export function DocumentViewer({
 
     return () => container.removeEventListener("scroll", handleScroll);
   }, [content]);
+
+  // Block visibility tracking with IntersectionObserver
+  useEffect(() => {
+    if (!onBlockView) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const blockId = entry.target.getAttribute("data-block-id");
+          const blockType = entry.target.getAttribute("data-block-type");
+          if (blockId && blockType) {
+            onBlockView(blockId, blockType, entry.isIntersecting);
+          }
+        });
+      },
+      { threshold: 0.5 } // 50% visible to count as "viewed"
+    );
+
+    // Observe all block elements
+    blockRefsRef.current.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [content, onBlockView]);
+
+  // Link click tracking
+  useEffect(() => {
+    if (!onLinkClick) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest("a");
+      if (link && link.href) {
+        onLinkClick(link.href, link.textContent || "");
+      }
+    };
+
+    container.addEventListener("click", handleClick);
+    return () => container.removeEventListener("click", handleClick);
+  }, [onLinkClick]);
+
+  // Register block ref for visibility tracking
+  const setBlockRef = useCallback((blockId: string, blockType: string) => {
+    return (el: HTMLDivElement | null) => {
+      if (el) {
+        el.setAttribute("data-block-id", blockId);
+        el.setAttribute("data-block-type", blockType);
+        blockRefsRef.current.set(blockId, el);
+      } else {
+        blockRefsRef.current.delete(blockId);
+      }
+    };
+  }, []);
 
   // Map database block types to component block types
   // Handles both nested format { type, data: {...} } and flat format { type, ... }
@@ -173,6 +237,7 @@ export function DocumentViewer({
                   return (
                     <div
                       key={dbBlock.id}
+                      ref={setBlockRef(dbBlock.id, dbBlock.type)}
                       className="overflow-x-auto rounded-lg border"
                     >
                       <table className="min-w-full divide-y divide-border">
@@ -213,7 +278,7 @@ export function DocumentViewer({
 
                 if (dbBlock.type === "checkbox") {
                   return (
-                    <div key={dbBlock.id} className="flex items-center gap-3">
+                    <div key={dbBlock.id} ref={setBlockRef(dbBlock.id, dbBlock.type)} className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={(dbBlock as any).checked || false}
@@ -232,7 +297,7 @@ export function DocumentViewer({
 
                 if (dbBlock.type === "text-input") {
                   return (
-                    <div key={dbBlock.id} className="space-y-1">
+                    <div key={dbBlock.id} ref={setBlockRef(dbBlock.id, dbBlock.type)} className="space-y-1">
                       {(dbBlock as any).label && (
                         <label className="text-sm font-medium text-foreground">
                           {(dbBlock as any).label}
@@ -264,7 +329,7 @@ export function DocumentViewer({
 
                 if (dbBlock.type === "date") {
                   return (
-                    <div key={dbBlock.id} className="space-y-1">
+                    <div key={dbBlock.id} ref={setBlockRef(dbBlock.id, dbBlock.type)} className="space-y-1">
                       <label className="text-sm font-medium text-foreground">
                         Date
                         {(dbBlock as any).required && (
@@ -285,42 +350,30 @@ export function DocumentViewer({
                   return (
                     <div
                       key={dbBlock.id}
+                      ref={setBlockRef(dbBlock.id, dbBlock.type)}
                       className="my-8 border-t-2 border-dashed border-muted-foreground/20"
                     />
                   );
                 }
 
+                // Skip payment block - payment is handled by PaymentStep component
                 if (dbBlock.type === "payment") {
-                  return (
-                    <div
-                      key={dbBlock.id}
-                      className="rounded-lg border border-primary/20 bg-primary/5 p-4"
-                    >
-                      <p className="font-medium text-primary">Payment Required</p>
-                      <p className="mt-1 text-2xl font-bold">
-                        {(dbBlock as any).currency}{" "}
-                        {((dbBlock as any).amount || 0).toFixed(2)}
-                      </p>
-                      {(dbBlock as any).description && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {(dbBlock as any).description}
-                        </p>
-                      )}
-                    </div>
-                  );
+                  return null;
                 }
 
                 return null;
               }
 
               return (
-                <BlockRenderer
-                  key={block.id}
-                  block={block}
-                  mode={mode}
-                  onChange={handleBlockChange}
-                  className="transition-all duration-200"
-                />
+                <div key={block.id} ref={setBlockRef(block.id, block.type)}>
+                  <BlockRenderer
+                    block={block}
+                    mode={mode}
+                    onChange={handleBlockChange}
+                    className="transition-all duration-200"
+                    downPaymentPercent={downPaymentPercent}
+                  />
+                </div>
               );
             })}
           </div>

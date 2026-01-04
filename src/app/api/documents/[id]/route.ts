@@ -49,6 +49,9 @@ function transformDocument(doc: typeof documents.$inferSelect) {
     expires_at: doc.expiresAt?.toISOString() || null,
     locked_at: doc.lockedAt?.toISOString() || null,
     current_version: doc.currentVersion || 1,
+    // Blockchain verification fields
+    blockchain_tx_hash: doc.blockchainTxHash || null,
+    blockchain_verified_at: doc.blockchainVerifiedAt?.toISOString() || null,
   }
 }
 

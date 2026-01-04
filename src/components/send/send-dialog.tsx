@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useTransition } from "react"
+import { useState, useCallback, useTransition, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid"
 import {
   DndContext,
@@ -58,7 +58,6 @@ import { RecipientInput, type Recipient, type RecipientRole } from "./recipient-
 import { EmailPreview } from "./email-preview"
 import { sendDocument, type SendDocumentInput } from "@/lib/send-document"
 import {
-  PaymentSettingsPanel,
   defaultPaymentSettings,
   type PaymentSettings
 } from "@/components/builder/payment-settings"
@@ -110,8 +109,23 @@ export function SendDialog({
   const [expiresAt, setExpiresAt] = useState("")
   const [passwordProtected, setPasswordProtected] = useState(false)
 
-  // Payment settings
-  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(defaultPaymentSettings)
+  // Payment settings - auto-enable if there's a pricing table/payment block
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => ({
+    ...defaultPaymentSettings,
+    enabled: hasPricingTable && stripeConnected,
+    amountType: hasPricingTable ? "pricing_table" : "fixed",
+  }))
+
+  // Auto-enable payment when dialog opens with pricing table
+  useEffect(() => {
+    if (open && hasPricingTable && stripeConnected) {
+      setPaymentSettings(prev => ({
+        ...prev,
+        enabled: true,
+        amountType: "pricing_table",
+      }))
+    }
+  }, [open, hasPricingTable, stripeConnected])
 
   // Active tab
   const [activeTab, setActiveTab] = useState("recipients")
@@ -311,7 +325,7 @@ export function SendDialog({
           onValueChange={setActiveTab}
           className="flex-1 overflow-hidden flex flex-col"
         >
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="recipients" className="gap-2">
               <Users className="h-4 w-4" />
               Recipients
@@ -319,10 +333,6 @@ export function SendDialog({
             <TabsTrigger value="message" className="gap-2">
               <Mail className="h-4 w-4" />
               Message
-            </TabsTrigger>
-            <TabsTrigger value="payment" className="gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payment
             </TabsTrigger>
             <TabsTrigger value="preview" className="gap-2">
               <Eye className="h-4 w-4" />
@@ -479,32 +489,6 @@ export function SendDialog({
               </div>
             </TabsContent>
 
-            <TabsContent value="payment" className="m-0 space-y-4">
-              {stripeConnected ? (
-                <PaymentSettingsPanel
-                  settings={paymentSettings}
-                  onChange={setPaymentSettings}
-                  hasPricingTable={hasPricingTable}
-                  pricingTableTotal={pricingTableTotal}
-                />
-              ) : (
-                <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                  <CreditCard className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">Connect Stripe to Collect Payments</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Connect your Stripe account in Settings to enable payment collection
-                    from recipients when they sign your documents.
-                  </p>
-                  <a
-                    href="/settings/stripe-connect"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Go to Settings → Integrations → Stripe
-                  </a>
-                </div>
-              )}
-            </TabsContent>
-
             <TabsContent value="preview" className="m-0">
               <EmailPreview
                 subject={
@@ -519,6 +503,49 @@ export function SendDialog({
             </TabsContent>
           </div>
         </Tabs>
+
+        {/* Payment Summary - shows automatically when there's a pricing table */}
+        {hasPricingTable && stripeConnected && pricingTableTotal > 0 && paymentSettings.enabled && (
+          <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 p-3 mx-1">
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium text-sm">Payment will be collected</p>
+                <p className="text-xs text-muted-foreground">
+                  ${pricingTableTotal.toFixed(2)} from pricing table •{" "}
+                  {paymentSettings.timing === "due_now" ? "Due Now" :
+                   paymentSettings.timing === "net_30" ? "Net 30" : "Net 60"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="collect-payment"
+                checked={paymentSettings.enabled}
+                onCheckedChange={(checked) =>
+                  setPaymentSettings(prev => ({ ...prev, enabled: !!checked }))
+                }
+              />
+              <Label htmlFor="collect-payment" className="text-xs cursor-pointer">
+                Collect payment
+              </Label>
+            </div>
+          </div>
+        )}
+
+        {/* Stripe not connected warning */}
+        {hasPricingTable && !stripeConnected && pricingTableTotal > 0 && (
+          <div className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3 mx-1">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800">Connect Stripe to collect payments</p>
+              <p className="text-xs text-amber-600">
+                Your document has ${pricingTableTotal.toFixed(2)} in pricing.{" "}
+                <a href="/settings/stripe-connect" className="underline">Connect Stripe</a> to collect payment.
+              </p>
+            </div>
+          </div>
+        )}
 
         <DialogFooter className="border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

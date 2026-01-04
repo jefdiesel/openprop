@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
-import { documents, recipients, documentEvents } from "@/lib/db/schema";
+import { documents, recipients, documentEvents, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
   generateSigningConfirmationEmail,
   generateSigningConfirmationSubject,
   generateSigningConfirmationPlainText,
+  generateViewNotificationEmail,
+  generateViewNotificationSubject,
+  generateViewNotificationPlainText,
 } from "@/lib/email-templates";
+import {
+  isBlockchainConfigured,
+  hashDocumentData,
+  hashContent,
+  hashEmail,
+  inscribeHash,
+  getChainInfo,
+  type DocumentHashData,
+} from "@/lib/blockchain";
+import { payments } from "@/lib/db/schema";
 import type {
   Block,
   Document,
@@ -97,6 +110,18 @@ export async function GET(
           timestamp: now.toISOString(),
         },
       });
+
+      // Send view notification email to document owner (async, don't block)
+      sendViewNotificationEmail(
+        documentData.userId,
+        recipientData.name || "",
+        recipientData.email,
+        documentData.title,
+        documentData.id,
+        now
+      ).catch((err) => {
+        console.error("Failed to send view notification email:", err);
+      });
     }
 
     // Check for payment requirement
@@ -109,9 +134,13 @@ export async function GET(
       (block) => block.type === "payment"
     );
     if (paymentBlock && paymentBlock.type === "payment") {
-      requiresPayment = paymentBlock.required;
-      paymentAmount = paymentBlock.amount;
-      paymentCurrency = paymentBlock.currency;
+      // Handle both flat and nested block structures
+      const blockData = (paymentBlock as unknown as { data?: Record<string, unknown> }).data;
+      const flatBlock = paymentBlock as unknown as Record<string, unknown>;
+
+      requiresPayment = (blockData?.required ?? flatBlock.required) as boolean;
+      paymentAmount = (blockData?.amount ?? flatBlock.amount) as number | undefined;
+      paymentCurrency = (blockData?.currency ?? flatBlock.currency) as string | undefined;
     }
 
     return NextResponse.json({
@@ -204,14 +233,6 @@ export async function POST(
       });
     }
 
-    // Handle sign action - require signature data
-    if (!signatureData) {
-      return NextResponse.json(
-        { error: "Signature data is required" },
-        { status: 400 }
-      );
-    }
-
     // Find the recipient
     const [recipientData] = await db.select({
       id: recipients.id,
@@ -256,12 +277,12 @@ export async function POST(
       (r) => r.role === "signer" && r.status === "signed" && r.id !== recipientData.id
     );
 
-    // Update recipient with signature
+    // Update recipient with signature (signatureData may be null if no required signatures)
     await db.update(recipients)
       .set({
         status: "signed",
         signedAt: now,
-        signatureData: signatureData as { type: 'drawn' | 'typed' | 'uploaded'; data: string; signedAt: string },
+        signatureData: signatureData ? signatureData as { type: 'drawn' | 'typed' | 'uploaded'; data: string; signedAt: string } : null,
         ipAddress,
       })
       .where(eq(recipients.id, recipientData.id));
@@ -315,6 +336,11 @@ export async function POST(
       await db.update(documents)
         .set({ status: "completed" })
         .where(eq(documents.id, recipientData.documentId));
+
+      // Trigger blockchain verification asynchronously (don't await)
+      triggerBlockchainVerification(recipientData.documentId, now).catch((err) => {
+        console.error("Failed to trigger blockchain verification:", err);
+      });
     }
 
     // Record signing event
@@ -323,7 +349,7 @@ export async function POST(
       recipientId: recipientData.id,
       eventType: "document_signed",
       eventData: {
-        signature_type: signatureData.type,
+        signature_type: signatureData?.type || "none",
         signed_at: now.toISOString(),
         ip_address: ipAddress,
         all_signed: allSignersSigned,
@@ -381,5 +407,146 @@ export async function POST(
       { error: "Failed to submit signature" },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Trigger blockchain inscription for a completed document
+ * This runs asynchronously and doesn't block the signing response
+ */
+async function triggerBlockchainVerification(documentId: string, completedAt: Date) {
+  if (!isBlockchainConfigured()) {
+    console.log("Blockchain inscription skipped - not configured");
+    return;
+  }
+
+  try {
+    const [document] = await db.select()
+      .from(documents)
+      .where(eq(documents.id, documentId))
+      .limit(1);
+
+    if (!document || document.blockchainTxHash) {
+      return;
+    }
+
+    // Get signers
+    const signersList = await db.select()
+      .from(recipients)
+      .where(eq(recipients.documentId, documentId));
+
+    const signers = signersList.filter(r => r.role === "signer" && r.signedAt);
+
+    // Check for payment
+    const [payment] = await db.select()
+      .from(payments)
+      .where(eq(payments.documentId, documentId))
+      .limit(1);
+
+    // Create hash data (privacy-first)
+    const hashData: DocumentHashData = {
+      documentId: document.id,
+      contentHash: hashContent(document.content as unknown[]),
+      signers: signers.map(r => ({
+        emailHash: hashEmail(r.email),
+        signedAt: r.signedAt!.toISOString(),
+      })),
+      paymentCollected: payment?.status === "succeeded",
+      completedAt: completedAt.toISOString(),
+    };
+
+    const documentHash = hashDocumentData(hashData);
+
+    // Inscribe on Base
+    const result = await inscribeHash(documentHash);
+
+    if (result.success && result.txHash) {
+      await db.update(documents)
+        .set({
+          blockchainTxHash: result.txHash,
+          blockchainVerifiedAt: completedAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(documents.id, documentId));
+
+      await db.insert(documentEvents).values({
+        documentId,
+        eventType: "blockchain_verified",
+        eventData: {
+          txHash: result.txHash,
+          documentHash,
+          chainId: getChainInfo().chainId,
+          auto_triggered: true,
+        },
+      });
+
+      console.log(`Document ${documentId} inscribed on Base: ${result.txHash}`);
+    } else {
+      console.error(`Failed to inscribe document ${documentId}:`, result.error);
+    }
+  } catch (error) {
+    console.error(`Blockchain inscription error for ${documentId}:`, error);
+  }
+}
+
+/**
+ * Send view notification email to document owner
+ */
+async function sendViewNotificationEmail(
+  ownerId: string,
+  recipientName: string,
+  recipientEmail: string,
+  documentTitle: string,
+  documentId: string,
+  viewedAt: Date
+) {
+  try {
+    // Get owner's info
+    const [owner] = await db.select({
+      email: users.email,
+      name: users.name,
+    })
+      .from(users)
+      .where(eq(users.id, ownerId))
+      .limit(1);
+
+    if (!owner || !owner.email) {
+      console.log("No owner email found, skipping view notification");
+      return;
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const documentLink = `${appUrl}/documents/${documentId}`;
+
+    const subject = generateViewNotificationSubject(recipientName || recipientEmail, documentTitle);
+    const html = generateViewNotificationEmail({
+      ownerName: owner.name || "",
+      recipientName,
+      recipientEmail,
+      documentTitle,
+      viewedAt,
+      documentLink,
+    });
+    const text = generateViewNotificationPlainText({
+      ownerName: owner.name || "",
+      recipientName,
+      recipientEmail,
+      documentTitle,
+      viewedAt,
+      documentLink,
+    });
+
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "OpenProposal <onboarding@resend.dev>",
+      to: owner.email,
+      subject,
+      html,
+      text,
+    });
+
+    console.log(`View notification sent to ${owner.email} for document ${documentId}`);
+  } catch (error) {
+    console.error("Error sending view notification email:", error);
+    throw error;
   }
 }

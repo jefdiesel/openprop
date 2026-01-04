@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DocumentViewer } from "@/components/signing/document-viewer";
+import { ActivityTimeline } from "@/components/documents/activity-timeline";
+import { VerificationSection } from "@/components/blockchain";
 import type { Block as DbBlock } from "@/types/database";
 
 interface Recipient {
@@ -171,6 +173,13 @@ export default function DocumentViewPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* Blockchain Verification Section */}
+      <VerificationSection
+        documentId={document.id}
+        documentTitle={document.title}
+        documentStatus={document.status}
+      />
+
       {/* Recipient info for signed/completed documents */}
       {recipients.length > 0 && (
         <Card>
@@ -214,19 +223,25 @@ export default function DocumentViewPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* Document content */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-auto">
-            <DocumentViewer
-              content={document.content}
-              title=""
-              mode="view"
-              className="border-0"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Document content and Activity Timeline side by side on larger screens */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Document content - takes 2/3 of width on large screens */}
+        <Card className="overflow-hidden lg:col-span-2">
+          <CardContent className="p-0">
+            <div className="max-h-[70vh] overflow-auto">
+              <DocumentViewer
+                content={document.content}
+                title=""
+                mode="view"
+                className="border-0"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Activity Timeline - takes 1/3 of width on large screens */}
+        <ActivityTimeline documentId={document.id} className="lg:col-span-1" />
+      </div>
     </div>
   );
 }

@@ -80,8 +80,9 @@ export interface PaymentBlockData {
   amount: number
   currency: string
   description: string
-  timing: "before_signature" | "after_signature"
+  timing: "due_now" | "net_30" | "net_60"
   usePricingTableTotal: boolean
+  downPaymentPercent: number // 0 = full amount, 50 = 50% down, etc.
   // Payment status (set after payment is made)
   paymentStatus?: "pending" | "paid" | "failed"
   paymentId?: string
@@ -201,8 +202,9 @@ export function getDefaultBlockData(type: BlockType): BlockData {
         amount: 0,
         currency: "USD",
         description: "Payment required",
-        timing: "before_signature",
-        usePricingTableTotal: false,
+        timing: "due_now",
+        usePricingTableTotal: true,
+        downPaymentPercent: 0, // 0 = full amount due
       }
   }
 }

@@ -34,7 +34,7 @@ export interface SigningDocument {
   requiresPayment: boolean;
   paymentAmount?: number;
   paymentCurrency?: string;
-  paymentTiming?: "before_signature" | "after_signature";
+  paymentTiming?: "due_now" | "net_30" | "net_60";
 }
 
 export interface SigningResult {
@@ -125,19 +125,24 @@ export async function getDocumentByToken(token: string): Promise<{
     let requiresPayment = false;
     let paymentAmount: number | undefined;
     let paymentCurrency: string | undefined;
-    let paymentTiming: "before_signature" | "after_signature" | undefined;
+    let paymentTiming: "due_now" | "net_30" | "net_60" | undefined;
 
     const content = documentData.content as Block[];
 
     // First check for payment block in content
+    // Note: Block structure can be either flat (types/database.ts) or nested (use-builder.tsx)
     const paymentBlock = content?.find(
       (block) => block.type === "payment"
     );
     if (paymentBlock && paymentBlock.type === "payment") {
-      requiresPayment = paymentBlock.required;
-      paymentAmount = paymentBlock.amount;
-      paymentCurrency = paymentBlock.currency;
-      paymentTiming = paymentBlock.timing;
+      // Handle both flat and nested block structures
+      const blockData = (paymentBlock as unknown as { data?: Record<string, unknown> }).data;
+      const flatBlock = paymentBlock as unknown as Record<string, unknown>;
+
+      requiresPayment = (blockData?.required ?? flatBlock.required) as boolean;
+      paymentAmount = (blockData?.amount ?? flatBlock.amount) as number | undefined;
+      paymentCurrency = (blockData?.currency ?? flatBlock.currency) as string | undefined;
+      paymentTiming = (blockData?.timing ?? flatBlock.timing) as "due_now" | "net_30" | "net_60" | undefined;
     }
 
     // Also check document settings for payment configuration (from SendDialog)
@@ -145,7 +150,7 @@ export async function getDocumentByToken(token: string): Promise<{
       enabled?: boolean;
       amount?: number;
       currency?: string;
-      timing?: "before_signature" | "after_signature";
+      timing?: "due_now" | "net_30" | "net_60";
     } | null;
 
     if (paymentSettings?.enabled && paymentSettings?.amount) {

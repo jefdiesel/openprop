@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export type PaymentTiming = "before_signature" | "after_signature";
+export type PaymentTiming = "due_now" | "net_30" | "net_60";
 export type PaymentAmountType = "fixed" | "pricing_table";
 
 export interface PaymentSettings {
@@ -133,28 +133,33 @@ export function PaymentSettingsPanel({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <Label className="font-medium">Payment Timing</Label>
+                <Label className="font-medium">Payment Terms</Label>
               </div>
               <Select
                 value={settings.timing}
                 onValueChange={(v) => handleTimingChange(v as PaymentTiming)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select when to collect payment" />
+                  <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="before_signature">
-                    Before signing
+                  <SelectItem value="due_now">
+                    Due Now
                   </SelectItem>
-                  <SelectItem value="after_signature">
-                    After signing
+                  <SelectItem value="net_30">
+                    Net 30
+                  </SelectItem>
+                  <SelectItem value="net_60">
+                    Net 60
                   </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {settings.timing === "before_signature"
-                  ? "Payment will be required before the recipient can sign the document."
-                  : "Payment will be collected after the recipient completes their signature."}
+                {settings.timing === "due_now"
+                  ? "Payment required immediately upon signing."
+                  : settings.timing === "net_30"
+                  ? "Payment due within 30 days of signing."
+                  : "Payment due within 60 days of signing."}
               </p>
             </div>
 
@@ -272,11 +277,13 @@ export function PaymentSettingsPanel({
                       </span>
                     </p>
                     <p>
-                      When:{" "}
+                      Terms:{" "}
                       <span className="font-medium text-foreground">
-                        {settings.timing === "before_signature"
-                          ? "Before signing"
-                          : "After signing"}
+                        {settings.timing === "due_now"
+                          ? "Due Now"
+                          : settings.timing === "net_30"
+                          ? "Net 30"
+                          : "Net 60"}
                       </span>
                     </p>
                   </div>
@@ -293,7 +300,7 @@ export function PaymentSettingsPanel({
 // Default payment settings
 export const defaultPaymentSettings: PaymentSettings = {
   enabled: false,
-  timing: "before_signature",
+  timing: "due_now",
   amountType: "fixed",
   fixedAmount: 0,
   currency: "USD",

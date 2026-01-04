@@ -9,6 +9,7 @@ import {
   Loader2,
   ChevronUp,
   X,
+  CreditCard,
 } from "lucide-react";
 
 interface SignActionBarProps {
@@ -16,6 +17,10 @@ interface SignActionBarProps {
   completedSignatures: number;
   onSign: () => void;
   onDecline?: () => void;
+  onPay?: () => void;
+  needsPayment?: boolean;
+  paymentAmount?: number;
+  paymentCurrency?: string;
   isSubmitting?: boolean;
   disabled?: boolean;
   className?: string;
@@ -26,6 +31,10 @@ export function SignActionBar({
   completedSignatures,
   onSign,
   onDecline,
+  onPay,
+  needsPayment = false,
+  paymentAmount,
+  paymentCurrency = "USD",
   isSubmitting = false,
   disabled = false,
   className,
@@ -33,6 +42,13 @@ export function SignActionBar({
   const remainingSignatures = requiredSignatures - completedSignatures;
   const allSigned = remainingSignatures <= 0;
   const canSign = !disabled && !isSubmitting;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: paymentCurrency,
+    }).format(amount);
+  };
 
   return (
     <div
@@ -97,34 +113,54 @@ export function SignActionBar({
               </Button>
             )}
 
-            <Button
-              type="button"
-              onClick={onSign}
-              disabled={!canSign || !allSigned}
-              className={cn(
-                "flex-1 sm:flex-none sm:min-w-[180px]",
-                allSigned
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : ""
-              )}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : allSigned ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Complete & Submit
-                </>
-              ) : (
-                <>
-                  <PenLine className="mr-2 h-4 w-4" />
-                  Sign Document
-                </>
-              )}
-            </Button>
+            {/* Show Pay button if payment required before signing */}
+            {needsPayment && onPay ? (
+              <Button
+                type="button"
+                onClick={onPay}
+                disabled={!allSigned || disabled}
+                className={cn(
+                  "flex-1 sm:flex-none sm:min-w-[180px]",
+                  allSigned
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : ""
+                )}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                {allSigned
+                  ? `Pay ${paymentAmount ? formatCurrency(paymentAmount) : ""}`
+                  : "Complete signatures to pay"}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={onSign}
+                disabled={!canSign || !allSigned}
+                className={cn(
+                  "flex-1 sm:flex-none sm:min-w-[180px]",
+                  allSigned
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : ""
+                )}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : allSigned ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Complete & Submit
+                  </>
+                ) : (
+                  <>
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Sign Document
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 

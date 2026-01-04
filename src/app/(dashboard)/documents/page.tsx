@@ -2,12 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { documents, recipients } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { documents, recipients, profiles } from "@/lib/db/schema";
+import { eq, and, desc, sql, isNull, or } from "drizzle-orm";
 import { DocumentsClient } from "./documents-client";
+import { ExportDropdown } from "@/components/dashboard/export-dropdown";
 
 export default async function DocumentsPage() {
   const session = await auth();
@@ -16,7 +17,28 @@ export default async function DocumentsPage() {
     redirect("/login");
   }
 
-  // Fetch user's documents (not templates)
+  // Get user's current organization context
+  const [profile] = await db
+    .select({ currentOrganizationId: profiles.currentOrganizationId })
+    .from(profiles)
+    .where(eq(profiles.id, session.user.id))
+    .limit(1);
+
+  // Build query based on context
+  // Team context: show all team documents
+  // Personal context: show user's personal documents (no org)
+  const whereClause = profile?.currentOrganizationId
+    ? and(
+        eq(documents.organizationId, profile.currentOrganizationId),
+        eq(documents.isTemplate, false)
+      )
+    : and(
+        eq(documents.userId, session.user.id),
+        isNull(documents.organizationId),
+        eq(documents.isTemplate, false)
+      );
+
+  // Fetch documents based on context
   const userDocs = await db
     .select({
       id: documents.id,
@@ -24,12 +46,13 @@ export default async function DocumentsPage() {
       status: documents.status,
       createdAt: documents.createdAt,
       updatedAt: documents.updatedAt,
+      lockedAt: documents.lockedAt,
     })
     .from(documents)
-    .where(and(eq(documents.userId, session.user.id), eq(documents.isTemplate, false)))
+    .where(whereClause)
     .orderBy(desc(documents.updatedAt));
 
-  // Get recipients for each document
+  // Get recipients for each document (with payment info)
   const docIds = userDocs.map((d) => d.id);
   const docRecipients =
     docIds.length > 0
@@ -38,6 +61,8 @@ export default async function DocumentsPage() {
             documentId: recipients.documentId,
             name: recipients.name,
             email: recipients.email,
+            paymentStatus: recipients.paymentStatus,
+            paymentAmount: recipients.paymentAmount,
           })
           .from(recipients)
           .where(sql`${recipients.documentId} IN ${docIds}`)
@@ -55,6 +80,9 @@ export default async function DocumentsPage() {
         : { name: "", email: "" },
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
+      lockedAt: doc.lockedAt,
+      paymentStatus: recipient?.paymentStatus as "pending" | "processing" | "succeeded" | "failed" | "refunded" | null,
+      paymentAmount: recipient?.paymentAmount || null,
     };
   });
 
@@ -78,12 +106,15 @@ export default async function DocumentsPage() {
             Manage and track all your proposals and contracts.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/documents/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Document
-          </Link>
-        </Button>
+        <div className="flex gap-3">
+          <ExportDropdown />
+          <Button asChild>
+            <Link href="/documents/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Document
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Documents List */}

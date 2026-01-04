@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
-import { constructWebhookEvent, stripe, getStripe } from "@/lib/stripe";
+import { constructWebhookEvent, stripe, getStripe, getPlanSeatLimit } from "@/lib/stripe";
 import { db } from "@/lib/db";
-import { documents, recipients, payments, documentEvents, profiles, subscriptions, earlyBirdSlots } from "@/lib/db/schema";
+import { documents, recipients, payments, documentEvents, profiles, subscriptions, earlyBirdSlots, organizations } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 
 // Disable body parsing for webhook signature verification
@@ -130,6 +130,15 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     .set({ status: "succeeded" })
     .where(eq(payments.stripePaymentIntentId, paymentIntent.id));
 
+  // Update recipient payment status for dashboard display
+  await db.update(recipients)
+    .set({
+      paymentStatus: "succeeded",
+      paymentAmount: paymentIntent.amount,
+      paymentIntentId: paymentIntent.id,
+    })
+    .where(eq(recipients.id, recipientId));
+
   // Log the event
   await db.insert(documentEvents).values({
     documentId,
@@ -154,6 +163,13 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   await db.update(payments)
     .set({ status: "failed" })
     .where(eq(payments.stripePaymentIntentId, paymentIntent.id));
+
+  // Update recipient payment status
+  if (recipientId) {
+    await db.update(recipients)
+      .set({ paymentStatus: "failed" })
+      .where(eq(recipients.id, recipientId));
+  }
 
   // Log the event
   if (documentId) {
@@ -191,6 +207,13 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   await db.update(payments)
     .set({ status: "refunded" })
     .where(eq(payments.stripePaymentIntentId, paymentIntentId));
+
+  // Update recipient payment status
+  if (recipientId) {
+    await db.update(recipients)
+      .set({ paymentStatus: "refunded" })
+      .where(eq(recipients.id, recipientId));
+  }
 
   // Log the event
   if (documentId) {
@@ -261,12 +284,20 @@ async function checkAndUpdateDocumentStatus(documentId: string) {
 
 async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.user_id;
+  const organizationId = session.metadata?.organization_id;
   const isEarlyBird = session.metadata?.is_early_bird === "true";
+  const isTeam = session.metadata?.is_team === "true";
   const subscriptionId = session.subscription as string;
   const customerId = session.customer as string;
 
-  if (!userId || !subscriptionId) {
-    console.error("Missing user_id or subscription in checkout session");
+  if (!subscriptionId) {
+    console.error("Missing subscription in checkout session");
+    return;
+  }
+
+  // Either userId or organizationId should be present
+  if (!userId && !organizationId) {
+    console.error("Missing user_id or organization_id in checkout session");
     return;
   }
 
@@ -275,72 +306,99 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
   const priceId = subscriptionData.items.data[0]?.price.id;
 
   // Determine plan from price ID
-  let planId: "pro" | "business" = "pro";
-  if (priceId?.includes("business")) {
-    planId = "business";
+  let planId: "pro" | "business" | "pro_team" | "business_team" = "pro";
+  if (isTeam || organizationId) {
+    if (priceId?.includes("business")) {
+      planId = "business_team";
+    } else {
+      planId = "pro_team";
+    }
+  } else {
+    if (priceId?.includes("business")) {
+      planId = "business";
+    }
   }
 
-  // Check if subscription exists
-  const [existingSub] = await db.select({ id: subscriptions.id })
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, userId))
-    .limit(1);
+  // Get seat limit for team plans
+  const seatLimit = getPlanSeatLimit(planId);
 
   // Extract period timestamps (Stripe v20+ uses different property names)
   const periodStart = (subscriptionData as unknown as { current_period_start?: number }).current_period_start;
   const periodEnd = (subscriptionData as unknown as { current_period_end?: number }).current_period_end;
 
-  if (existingSub) {
-    // Update existing subscription
-    await db.update(subscriptions)
-      .set({
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        planId,
-        status: subscriptionData.status as "active" | "canceled" | "past_due" | "trialing" | "incomplete" | "incomplete_expired",
-        isEarlyBird,
-        billingInterval: subscriptionData.items.data[0]?.price.recurring?.interval === "year" ? "yearly" : "monthly",
-        currentPeriodStart: periodStart ? new Date(periodStart * 1000) : null,
-        currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
-        cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
-        updatedAt: new Date(),
-      })
-      .where(eq(subscriptions.userId, userId));
-  } else {
-    // Create new subscription
-    await db.insert(subscriptions).values({
-      userId,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      planId,
-      status: subscriptionData.status as "active" | "canceled" | "past_due" | "trialing" | "incomplete" | "incomplete_expired",
-      isEarlyBird,
-      billingInterval: subscriptionData.items.data[0]?.price.recurring?.interval === "year" ? "yearly" : "monthly",
-      currentPeriodStart: periodStart ? new Date(periodStart * 1000) : null,
-      currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
-      cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
-    });
-  }
+  const subscriptionValues = {
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
+    planId,
+    status: subscriptionData.status as "active" | "canceled" | "past_due" | "trialing" | "incomplete" | "incomplete_expired",
+    isEarlyBird,
+    billingInterval: subscriptionData.items.data[0]?.price.recurring?.interval === "year" ? "yearly" : "monthly" as "monthly" | "yearly",
+    seatLimit,
+    currentPeriodStart: periodStart ? new Date(periodStart * 1000) : null,
+    currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
+    cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
+    updatedAt: new Date(),
+  };
 
-  // If early bird, claim a slot
-  if (isEarlyBird) {
-    const [{ total }] = await db.select({ total: count() }).from(earlyBirdSlots);
-    const slotNumber = (total || 0) + 1;
+  if (organizationId) {
+    // Organization subscription
+    const [existingSub] = await db.select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(eq(subscriptions.organizationId, organizationId))
+      .limit(1);
 
-    if (slotNumber <= 100) {
-      await db.insert(earlyBirdSlots).values({
-        userId,
-        slotNumber,
-        planId,
+    if (existingSub) {
+      await db.update(subscriptions)
+        .set(subscriptionValues)
+        .where(eq(subscriptions.organizationId, organizationId));
+    } else {
+      await db.insert(subscriptions).values({
+        ...subscriptionValues,
+        organizationId,
+        userId: null,
       });
+    }
+  } else if (userId) {
+    // User subscription
+    const [existingSub] = await db.select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1);
+
+    if (existingSub) {
+      await db.update(subscriptions)
+        .set(subscriptionValues)
+        .where(eq(subscriptions.userId, userId));
+    } else {
+      await db.insert(subscriptions).values({
+        ...subscriptionValues,
+        userId,
+        organizationId: null,
+      });
+    }
+
+    // If early bird, claim a slot
+    if (isEarlyBird) {
+      const [{ total }] = await db.select({ total: count() }).from(earlyBirdSlots);
+      const slotNumber = (total || 0) + 1;
+
+      if (slotNumber <= 100) {
+        await db.insert(earlyBirdSlots).values({
+          userId,
+          slotNumber,
+          planId: planId as "free" | "pro" | "business",
+        });
+      }
     }
   }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.user_id;
-  if (!userId) {
-    console.log("No user_id in subscription metadata");
+  const organizationId = subscription.metadata?.organization_id;
+
+  if (!userId && !organizationId) {
+    console.log("No user_id or organization_id in subscription metadata");
     return;
   }
 

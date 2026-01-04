@@ -6,6 +6,7 @@ import {
   jsonb,
   boolean,
   integer,
+  bigint,
   primaryKey,
   index,
   uniqueIndex,
@@ -90,10 +91,15 @@ export const profiles = pgTable(
     stripeAccountId: text('stripe_account_id'),
     stripeAccountEnabled: boolean('stripe_account_enabled').default(false),
     stripeCustomerId: text('stripe_customer_id'),
+    // Current organization context (for team users)
+    currentOrganizationId: uuid('current_organization_id'),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },
-  (profile) => [index('profiles_stripe_account_id_idx').on(profile.stripeAccountId)]
+  (profile) => [
+    index('profiles_stripe_account_id_idx').on(profile.stripeAccountId),
+    index('profiles_current_org_id_idx').on(profile.currentOrganizationId),
+  ]
 );
 
 // Documents
@@ -101,9 +107,12 @@ export const documents = pgTable(
   'documents',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    // openpropId: text('openprop_id'), // Future: Human-readable ID like OP-A1B2C3
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    // Organization ownership (null for solo users)
+    organizationId: uuid('organization_id'),
     title: text('title').notNull(),
     status: text('status')
       .$type<'draft' | 'sent' | 'viewed' | 'completed' | 'expired' | 'declined'>()
@@ -129,6 +138,7 @@ export const documents = pgTable(
   },
   (document) => [
     index('documents_user_id_idx').on(document.userId),
+    index('documents_org_id_idx').on(document.organizationId),
     index('documents_status_idx').on(document.status),
     index('documents_is_template_idx').on(document.isTemplate),
     index('documents_created_at_idx').on(document.createdAt),
@@ -164,6 +174,13 @@ export const recipients = pgTable(
     }>(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
+    // Payment tracking
+    paymentStatus: text('payment_status')
+      .$type<'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded'>(),
+    paymentAmount: integer('payment_amount'), // Amount in cents
+    paymentIntentId: text('payment_intent_id'),
+    paymentTiming: text('payment_timing')
+      .$type<'due_now' | 'net_30' | 'net_60'>(),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   },
   (recipient) => [
@@ -285,13 +302,15 @@ export const subscriptions = pgTable(
   'subscriptions',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    // User subscription (for solo users)
     userId: uuid('user_id')
-      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    // Organization subscription (for teams) - one of userId or organizationId must be set
+    organizationId: uuid('organization_id'),
     stripeCustomerId: text('stripe_customer_id'),
     stripeSubscriptionId: text('stripe_subscription_id').unique(),
     planId: text('plan_id')
-      .$type<'free' | 'pro' | 'business'>()
+      .$type<'free' | 'pro' | 'business' | 'pro_team' | 'business_team'>()
       .default('free')
       .notNull(),
     status: text('status')
@@ -310,6 +329,8 @@ export const subscriptions = pgTable(
       .$type<'monthly' | 'yearly'>()
       .default('monthly')
       .notNull(),
+    // Team seat tracking
+    seatLimit: integer('seat_limit'), // null = unlimited
     currentPeriodStart: timestamp('current_period_start', { mode: 'date' }),
     currentPeriodEnd: timestamp('current_period_end', { mode: 'date' }),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
@@ -318,7 +339,8 @@ export const subscriptions = pgTable(
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },
   (subscription) => [
-    uniqueIndex('subscriptions_user_id_idx').on(subscription.userId),
+    index('subscriptions_user_id_idx').on(subscription.userId),
+    index('subscriptions_org_id_idx').on(subscription.organizationId),
     index('subscriptions_stripe_subscription_id_idx').on(
       subscription.stripeSubscriptionId
     ),
@@ -389,6 +411,119 @@ export const documentVersions = pgTable(
 );
 
 // ==========================================
+// Organizations / Teams
+// ==========================================
+
+// Organizations table
+export const organizations = pgTable(
+  'organizations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    slug: text('slug').unique().notNull(), // For URLs: /team/acme-inc
+    logoUrl: text('logo_url'),
+    brandColor: text('brand_color').default('#000000'),
+    // Stripe Connect (team-level, not user-level)
+    stripeAccountId: text('stripe_account_id'),
+    stripeAccountEnabled: boolean('stripe_account_enabled').default(false),
+    // Storage tracking
+    storageUsedBytes: bigint('storage_used_bytes', { mode: 'number' }).default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (org) => [
+    uniqueIndex('organizations_slug_idx').on(org.slug),
+    index('organizations_stripe_account_id_idx').on(org.stripeAccountId),
+  ]
+);
+
+// Organization members
+export const organizationMembers = pgTable(
+  'organization_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role')
+      .$type<'owner' | 'admin' | 'member'>()
+      .default('member')
+      .notNull(),
+    invitedBy: uuid('invited_by').references(() => users.id),
+    joinedAt: timestamp('joined_at', { mode: 'date' }),
+    status: text('status')
+      .$type<'pending' | 'active' | 'removed'>()
+      .default('active')
+      .notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (member) => [
+    uniqueIndex('org_members_unique').on(member.organizationId, member.userId),
+    index('org_members_org_id_idx').on(member.organizationId),
+    index('org_members_user_id_idx').on(member.userId),
+    index('org_members_status_idx').on(member.status),
+  ]
+);
+
+// Pending invites
+export const organizationInvites = pgTable(
+  'organization_invites',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    email: text('email').notNull(),
+    role: text('role')
+      .$type<'admin' | 'member'>()
+      .default('member')
+      .notNull(),
+    token: text('token').unique().notNull(),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+    acceptedAt: timestamp('accepted_at', { mode: 'date' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (invite) => [
+    index('org_invites_org_id_idx').on(invite.organizationId),
+    index('org_invites_email_idx').on(invite.email),
+    uniqueIndex('org_invites_token_idx').on(invite.token),
+  ]
+);
+
+// Storage tracking
+export const storageItems = pgTable(
+  'storage_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    documentId: uuid('document_id').references(() => documents.id, {
+      onDelete: 'set null',
+    }),
+    uploadedBy: uuid('uploaded_by')
+      .notNull()
+      .references(() => users.id),
+    fileName: text('file_name').notNull(),
+    fileType: text('file_type').notNull(),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    storagePath: text('storage_path').notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (item) => [
+    index('storage_items_org_id_idx').on(item.organizationId),
+    index('storage_items_document_id_idx').on(item.documentId),
+    index('storage_items_uploaded_by_idx').on(item.uploadedBy),
+  ]
+);
+
+// ==========================================
 // Relations
 // ==========================================
 
@@ -410,6 +545,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [earlyBirdSlots.userId],
   }),
+  // Organization memberships
+  organizationMemberships: many(organizationMembers),
+  invitedMembers: many(organizationMembers, { relationName: 'invitedBy' }),
+  sentInvites: many(organizationInvites),
+  storageUploads: many(storageItems),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -431,12 +571,20 @@ export const profilesRelations = relations(profiles, ({ one }) => ({
     fields: [profiles.id],
     references: [users.id],
   }),
+  currentOrganization: one(organizations, {
+    fields: [profiles.currentOrganizationId],
+    references: [organizations.id],
+  }),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
   user: one(users, {
     fields: [documents.userId],
     references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [documents.organizationId],
+    references: [organizations.id],
   }),
   recipients: many(recipients),
   events: many(documentEvents),
@@ -446,6 +594,7 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
     fields: [documents.lockedBy],
     references: [recipients.id],
   }),
+  storageItems: many(storageItems),
 }));
 
 export const recipientsRelations = relations(recipients, ({ one, many }) => ({
@@ -498,6 +647,10 @@ export const subscriptionsRelations = relations(subscriptions, ({ one, many }) =
     fields: [subscriptions.userId],
     references: [users.id],
   }),
+  organization: one(organizations, {
+    fields: [subscriptions.organizationId],
+    references: [organizations.id],
+  }),
   addons: many(subscriptionAddons),
 }));
 
@@ -522,6 +675,63 @@ export const documentVersionsRelations = relations(documentVersions, ({ one }) =
   }),
   createdByUser: one(users, {
     fields: [documentVersions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// ==========================================
+// Organization Relations
+// ==========================================
+
+export const organizationsRelations = relations(organizations, ({ many, one }) => ({
+  members: many(organizationMembers),
+  invites: many(organizationInvites),
+  documents: many(documents),
+  storageItems: many(storageItems),
+  subscription: one(subscriptions, {
+    fields: [organizations.id],
+    references: [subscriptions.organizationId],
+  }),
+}));
+
+export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [organizationMembers.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [organizationMembers.userId],
+    references: [users.id],
+  }),
+  invitedByUser: one(users, {
+    fields: [organizationMembers.invitedBy],
+    references: [users.id],
+    relationName: 'invitedBy',
+  }),
+}));
+
+export const organizationInvitesRelations = relations(organizationInvites, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [organizationInvites.organizationId],
+    references: [organizations.id],
+  }),
+  invitedByUser: one(users, {
+    fields: [organizationInvites.invitedBy],
+    references: [users.id],
+  }),
+}));
+
+export const storageItemsRelations = relations(storageItems, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [storageItems.organizationId],
+    references: [organizations.id],
+  }),
+  document: one(documents, {
+    fields: [storageItems.documentId],
+    references: [documents.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [storageItems.uploadedBy],
     references: [users.id],
   }),
 }));

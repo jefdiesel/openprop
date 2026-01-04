@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, organizations } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { getConnectAccountStatus } from "@/lib/stripe";
@@ -17,16 +17,49 @@ export async function GET() {
       );
     }
 
-    // Get user's profile with Stripe account ID
-    const [profile] = await db.select({ stripeAccountId: profiles.stripeAccountId })
+    // Get user's profile with Stripe account ID and current org context
+    const [profile] = await db.select({
+      stripeAccountId: profiles.stripeAccountId,
+      currentOrganizationId: profiles.currentOrganizationId,
+    })
       .from(profiles)
       .where(eq(profiles.id, userId))
       .limit(1);
 
-    // Check if user has a connected account
+    // If in organization context, check org's Stripe account
+    if (profile?.currentOrganizationId) {
+      const [org] = await db.select({
+        stripeAccountId: organizations.stripeAccountId,
+        stripeAccountEnabled: organizations.stripeAccountEnabled,
+        name: organizations.name,
+      })
+        .from(organizations)
+        .where(eq(organizations.id, profile.currentOrganizationId))
+        .limit(1);
+
+      if (!org?.stripeAccountId) {
+        return NextResponse.json({
+          hasAccount: false,
+          isTeam: true,
+          teamName: org?.name,
+        });
+      }
+
+      const status = await getConnectAccountStatus(org.stripeAccountId);
+
+      return NextResponse.json({
+        hasAccount: true,
+        isTeam: true,
+        teamName: org.name,
+        status,
+      });
+    }
+
+    // Personal context - check user's Stripe account
     if (!profile?.stripeAccountId) {
       return NextResponse.json({
         hasAccount: false,
+        isTeam: false,
       });
     }
 
@@ -35,6 +68,7 @@ export async function GET() {
 
     return NextResponse.json({
       hasAccount: true,
+      isTeam: false,
       status,
     });
   } catch (error) {

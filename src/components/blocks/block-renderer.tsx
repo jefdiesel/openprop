@@ -26,6 +26,7 @@ export interface BlockRendererProps {
   mode: BlockMode;
   onChange?: (block: Block) => void;
   className?: string;
+  downPaymentPercent?: number; // From payment block, for pricing table display
 }
 
 export function BlockRenderer({
@@ -33,6 +34,7 @@ export function BlockRenderer({
   mode,
   onChange,
   className,
+  downPaymentPercent,
 }: BlockRendererProps) {
   // Type-safe change handlers for each block type
   const handleTextChange = useCallback(
@@ -137,6 +139,7 @@ export function BlockRenderer({
             block={block}
             mode={mode}
             onChange={handlePricingTableChange}
+            downPaymentPercent={downPaymentPercent}
           />
         );
 

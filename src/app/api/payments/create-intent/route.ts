@@ -21,10 +21,31 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as CreatePaymentIntentRequest;
     const { amount, currency, documentId, recipientId } = body;
 
+    console.log(`Payment intent request: amount=${amount}, currency=${currency}, docId=${documentId}`);
+
     // Validate required fields
     if (!amount || amount <= 0) {
       return NextResponse.json(
         { error: "Invalid amount" },
+        { status: 400 }
+      );
+    }
+
+    // Stripe maximum is $999,999.99. Add reasonable upper limit.
+    // If amount seems too high, it might be in cents already - don't double convert
+    const MAX_AMOUNT_DOLLARS = 999999.99;
+    let finalAmount = amount;
+
+    // Detect if amount might already be in cents (e.g., > $10,000 and looks like cents)
+    if (amount > 10000 && amount === Math.floor(amount) && amount > MAX_AMOUNT_DOLLARS) {
+      // Amount looks like it might already be in cents - use directly without conversion
+      console.warn(`Amount ${amount} appears to already be in cents, using directly`);
+      finalAmount = amount / 100; // Convert back to dollars for proper handling
+    }
+
+    if (finalAmount > MAX_AMOUNT_DOLLARS) {
+      return NextResponse.json(
+        { error: `Amount cannot exceed $${MAX_AMOUNT_DOLLARS.toLocaleString()}` },
         { status: 400 }
       );
     }
@@ -98,7 +119,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     // Calculate platform fee (e.g., 2.5% of transaction)
-    const amountInCents = toCents(amount);
+    const amountInCents = toCents(finalAmount);
     const platformFeePercent = 0.025; // 2.5%
     const applicationFeeAmount = profile?.stripeAccountId
       ? Math.round(amountInCents * platformFeePercent)

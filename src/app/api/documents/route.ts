@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { documents } from '@/lib/db/schema'
+import { documents, profiles } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
-import { eq, and, desc, asc, ilike, sql, count } from 'drizzle-orm'
+import { eq, and, desc, asc, ilike, sql, count, isNull } from 'drizzle-orm'
 import * as z from 'zod'
 import type { Block } from '@/types/database'
 
@@ -38,6 +38,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get user's current organization context
+    const [profile] = await db
+      .select({ currentOrganizationId: profiles.currentOrganizationId })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1)
+
     // Parse query parameters
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
@@ -48,8 +55,12 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sort_by') || 'updated_at'
     const sortOrder = searchParams.get('sort_order') || 'desc'
 
-    // Build conditions
-    const conditions = [eq(documents.userId, userId)]
+    // Build conditions based on context
+    // Team context: show all team documents
+    // Personal context: show user's personal documents (no org)
+    const conditions = profile?.currentOrganizationId
+      ? [eq(documents.organizationId, profile.currentOrganizationId)]
+      : [eq(documents.userId, userId), isNull(documents.organizationId)]
 
     if (status) {
       conditions.push(eq(documents.status, status as 'draft' | 'sent' | 'viewed' | 'completed' | 'expired' | 'declined'))
@@ -103,6 +114,9 @@ export async function GET(request: NextRequest) {
       updated_at: doc.updatedAt?.toISOString() || null,
       sent_at: doc.sentAt?.toISOString() || null,
       expires_at: doc.expiresAt?.toISOString() || null,
+      // Blockchain verification fields
+      blockchain_tx_hash: doc.blockchainTxHash || null,
+      blockchain_verified_at: doc.blockchainVerifiedAt?.toISOString() || null,
     }))
 
     return NextResponse.json({
@@ -136,6 +150,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user's current organization context
+    const [profile] = await db
+      .select({ currentOrganizationId: profiles.currentOrganizationId })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1)
+
     // Parse and validate request body
     const body = await request.json()
     const validationResult = createDocumentSchema.safeParse(body)
@@ -149,10 +170,11 @@ export async function POST(request: NextRequest) {
 
     const { title, content, is_template, template_category, variables, settings } = validationResult.data
 
-    // Create document
+    // Create document (in team context if applicable)
     const [document] = await db.insert(documents)
       .values({
         userId,
+        organizationId: profile?.currentOrganizationId || null,
         title,
         content: content as Block[],
         status: 'draft',

@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,11 @@ const navItems = [
     title: "Templates",
     href: "/templates",
     icon: FolderOpen,
+  },
+  {
+    title: "Team",
+    href: "/settings/team",
+    icon: Users,
   },
   {
     title: "Settings",
@@ -84,7 +90,7 @@ function SidebarContent({
     : user?.email?.[0]?.toUpperCase() || "?";
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col h-full min-h-0">
       {/* Logo */}
       <div
         className={cn(
@@ -105,22 +111,21 @@ function SidebarContent({
           <span className="text-lg">OpenProposal</span>
         </Link>
         {collapsed && !isMobile && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <button
+            onClick={onToggle}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+          >
             <Send className="h-5 w-5" />
-          </div>
+          </button>
         )}
-        {!isMobile && (
+        {!isMobile && !collapsed && (
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={onToggle}
             className="hidden lg:flex"
           >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            <ChevronLeft className="h-4 w-4" />
           </Button>
         )}
       </div>
@@ -232,7 +237,7 @@ export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden h-screen border-r bg-card transition-all duration-300 lg:block",
+        "hidden sticky top-0 h-screen border-r bg-card transition-all duration-300 lg:flex lg:flex-col",
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
