@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { db } from "@/lib/db";
 import { verificationTokens } from "@/lib/db/schema";
 import { v4 as uuidv4 } from "uuid";
+import { createHash } from "crypto";
 import {
   getOrganizationMembers,
   getOrganizationInvites,
@@ -114,19 +115,23 @@ export async function POST(
     if (resend && org) {
       try {
         // Generate a verification token for magic link auth
-        const magicToken = uuidv4();
+        // NextAuth stores hashed tokens, so we hash before storing
+        const rawToken = uuidv4();
+        const hashedToken = createHash("sha256")
+          .update(`${rawToken}${process.env.AUTH_SECRET || ""}`)
+          .digest("hex");
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        // Store the verification token (NextAuth will consume this)
+        // Store the hashed verification token (NextAuth will hash incoming token to match)
         await db.insert(verificationTokens).values({
           identifier: email.toLowerCase(),
-          token: magicToken,
+          token: hashedToken,
           expires,
         });
 
         // Build the magic link URL that authenticates and redirects to invite
         const callbackUrl = encodeURIComponent(`/invite/${invite.token}`);
-        const magicLinkUrl = `${baseUrl}/api/auth/callback/resend?token=${magicToken}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
+        const magicLinkUrl = `${baseUrl}/api/auth/callback/resend?token=${rawToken}&email=${encodeURIComponent(email)}&callbackUrl=${callbackUrl}`;
 
         const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@sendprop.com>";
         await resend.emails.send({
