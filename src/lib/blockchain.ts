@@ -344,8 +344,19 @@ export async function inscribeDataToAddress(
     // The payload is already base64, convert to hex for transaction data
     const txData = toHex(base64Payload) as `0x${string}`;
 
+    // Get account from wallet client
+    const account = walletClient.account;
+    if (!account) {
+      return {
+        success: false,
+        error: 'No account configured in wallet client',
+      };
+    }
+
     // Send transaction TO the recipient address with the data
     const txHash = await walletClient.sendTransaction({
+      account,
+      chain: config.chain,
       to: recipientAddress,
       value: BigInt(0),
       data: txData,
