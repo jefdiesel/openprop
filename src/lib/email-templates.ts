@@ -711,3 +711,152 @@ This is an automatic notification. You'll receive another email when the documen
 This email was sent via OpenProposal.
 `.trim()
 }
+
+// Ethscription receipt email templates
+interface EthscriptionReceiptVariables {
+  recipientName: string
+  recipientAddress: string
+  documentTitle: string
+  network: string
+  txHash: string
+  explorerUrl: string
+}
+
+export function generateEthscriptionReceiptEmail({
+  recipientName,
+  recipientAddress,
+  documentTitle,
+  network,
+  txHash,
+  explorerUrl,
+}: EthscriptionReceiptVariables): string {
+  const displayRecipientName = recipientName || "there"
+  const shortAddress = `${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)}`
+  const shortTxHash = `${txHash.slice(0, 10)}...${txHash.slice(-8)}`
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calldata Inscribed on ${escapeHtml(network)}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 24px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">SendProp</h1>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="background-color: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+              <!-- Success Badge -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; background-color: #f3e8ff; border-radius: 50%; padding: 16px;">
+                  <span style="font-size: 32px;">⛓️</span>
+                </div>
+              </div>
+
+              <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 600; color: #1a1a1a; text-align: center;">
+                Calldata Successfully Inscribed
+              </h2>
+
+              <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; text-align: center;">
+                Hi ${escapeHtml(displayRecipientName)}, the calldata from your signed document has been inscribed on-chain.
+              </p>
+
+              <!-- Transaction Card -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 24px 0;">
+                <tr>
+                  <td style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 20px;">
+                    <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px;">
+                      ${escapeHtml(network)} Network
+                    </p>
+                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">
+                      <strong>Document:</strong> ${escapeHtml(documentTitle)}
+                    </p>
+                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">
+                      <strong>Recipient:</strong> ${escapeHtml(shortAddress)}
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #666;">
+                      <strong>Transaction:</strong> ${escapeHtml(shortTxHash)}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="${escapeHtml(explorerUrl)}"
+                       style="display: inline-block; background-color: #7c3aed; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 6px;">
+                      View on Explorer
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 24px 0 0 0; text-align: center;">
+                This transaction is permanently recorded on the blockchain.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #999;">
+                This email was sent via SendProp.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim()
+}
+
+export function generateEthscriptionReceiptSubject(network: string): string {
+  return `Calldata Inscribed on ${network}`
+}
+
+export function generateEthscriptionReceiptPlainText({
+  recipientName,
+  recipientAddress,
+  documentTitle,
+  network,
+  txHash,
+  explorerUrl,
+}: EthscriptionReceiptVariables): string {
+  const displayRecipientName = recipientName || "there"
+  const shortAddress = `${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)}`
+
+  return `
+Hi ${displayRecipientName},
+
+The calldata from your signed document has been inscribed on-chain.
+
+Network: ${network}
+Document: ${documentTitle}
+Recipient Address: ${shortAddress}
+Transaction: ${txHash}
+
+View on explorer: ${explorerUrl}
+
+This transaction is permanently recorded on the blockchain.
+
+---
+This email was sent via SendProp.
+`.trim()
+}

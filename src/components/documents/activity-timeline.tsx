@@ -89,6 +89,18 @@ const eventConfig: Record<
     color: "text-emerald-600",
     bgColor: "bg-emerald-100",
   },
+  ethscription_completed: {
+    icon: ShieldCheck,
+    label: "Calldata Inscribed",
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
+  },
+  ethscription_failed: {
+    icon: XCircle,
+    label: "Inscription Failed",
+    color: "text-red-600",
+    bgColor: "bg-red-100",
+  },
   // Client-side tracking events
   page_view: {
     icon: Eye,
@@ -283,6 +295,15 @@ function formatEventData(
     case "blockchain_verified":
       const txHash = eventData.txHash as string;
       return txHash ? `TX: ${txHash.slice(0, 10)}...` : null;
+
+    case "ethscription_completed":
+      const ethTxHash = eventData.txHash as string;
+      const network = eventData.network as string;
+      return ethTxHash ? `${network}: ${ethTxHash.slice(0, 10)}...` : null;
+
+    case "ethscription_failed":
+      const ethError = eventData.error as string;
+      return ethError ? ethError.slice(0, 50) : "Inscription failed";
 
     case "document_locked":
       return eventData.reason === "first_signature" ? "First signature received" : null;

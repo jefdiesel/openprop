@@ -10,6 +10,9 @@ import {
   generateViewNotificationEmail,
   generateViewNotificationSubject,
   generateViewNotificationPlainText,
+  generateEthscriptionReceiptEmail,
+  generateEthscriptionReceiptSubject,
+  generateEthscriptionReceiptPlainText,
 } from "@/lib/email-templates";
 import {
   isBlockchainConfigured,
@@ -597,6 +600,63 @@ async function triggerEthscriptions(documentId: string, content: Block[]) {
         });
 
         console.log(`Ethscription completed for block ${blockId}: ${result.txHash}`);
+
+        // Send receipt email to the signer
+        try {
+          // Get document and recipient info for email
+          const [fullDoc] = await db.select()
+            .from(documents)
+            .where(eq(documents.id, documentId))
+            .limit(1);
+
+          const signerRecipients = await db.select()
+            .from(recipients)
+            .where(eq(recipients.documentId, documentId));
+
+          // Find the signer who provided this address (or use first signer)
+          const signer = signerRecipients.find(r => r.role === "signer" && r.status === "signed")
+            || signerRecipients[0];
+
+          if (signer && fullDoc && result.explorerUrl) {
+            const networkLabel = {
+              ethereum: "Ethereum",
+              base: "Base",
+              arbitrum: "Arbitrum",
+              optimism: "Optimism",
+              polygon: "Polygon",
+            }[network] || network;
+
+            const subject = generateEthscriptionReceiptSubject(networkLabel);
+            const html = generateEthscriptionReceiptEmail({
+              recipientName: signer.name || "",
+              recipientAddress,
+              documentTitle: fullDoc.title,
+              network: networkLabel,
+              txHash: result.txHash,
+              explorerUrl: result.explorerUrl,
+            });
+            const text = generateEthscriptionReceiptPlainText({
+              recipientName: signer.name || "",
+              recipientAddress,
+              documentTitle: fullDoc.title,
+              network: networkLabel,
+              txHash: result.txHash,
+              explorerUrl: result.explorerUrl,
+            });
+
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@sendprop.com>",
+              to: signer.email,
+              subject,
+              html,
+              text,
+            });
+
+            console.log(`Ethscription receipt email sent to ${signer.email}`);
+          }
+        } catch (emailError) {
+          console.error("Failed to send ethscription receipt email:", emailError);
+        }
       } else {
         console.error(`Ethscription failed for block ${blockId}:`, result.error);
 
