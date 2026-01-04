@@ -70,9 +70,9 @@ function LoginContent() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
+        <CardTitle className="text-2xl">Get Started</CardTitle>
         <CardDescription>
-          Sign in to your account to continue
+          Sign in or create an account to continue
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
