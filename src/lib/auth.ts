@@ -19,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@send.sendprop.com>",
+      from: process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@sendprop.com>",
     }),
   ],
   callbacks: {

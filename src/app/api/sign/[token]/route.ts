@@ -390,7 +390,7 @@ export async function POST(
         });
 
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@send.sendprop.com>",
+          from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@sendprop.com>",
           to: fullRecipient.email,
           subject,
           html,
@@ -666,7 +666,7 @@ async function sendViewNotificationEmail(
     });
 
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@send.sendprop.com>",
+      from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@sendprop.com>",
       to: owner.email,
       subject,
       html,
