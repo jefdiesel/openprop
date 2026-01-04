@@ -227,7 +227,7 @@ export async function sendDocument(
       // Send email via Resend
       try {
         const emailResult = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || "OpenProposal <onboarding@resend.dev>",
+          from: process.env.RESEND_FROM_EMAIL || "SendProp <noreply@send.sendprop.com>",
           to: record.email,
           subject,
           html: htmlContent,

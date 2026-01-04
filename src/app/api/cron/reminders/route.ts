@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 
           try {
             const emailResult = await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || 'OpenProposal <noreply@resend.dev>',
+              from: process.env.RESEND_FROM_EMAIL || 'SendProp <noreply@send.sendprop.com>',
               to: recipient.email,
               subject,
               html: htmlContent,

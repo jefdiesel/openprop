@@ -199,7 +199,7 @@ export async function POST(
         })
 
         const result = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'OpenProposal <noreply@resend.dev>',
+          from: process.env.RESEND_FROM_EMAIL || 'SendProp <noreply@send.sendprop.com>',
           to: link.email,
           subject,
           html: htmlContent,

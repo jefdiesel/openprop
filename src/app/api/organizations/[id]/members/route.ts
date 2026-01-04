@@ -109,7 +109,7 @@ export async function POST(
 
     if (resend && org) {
       try {
-        const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
+        const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || "SendProp <noreply@send.sendprop.com>";
         await resend.emails.send({
           from: fromEmail,
           to: email,
