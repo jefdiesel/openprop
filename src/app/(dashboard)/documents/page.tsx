@@ -130,7 +130,7 @@ export default async function DocumentsPage() {
         name: doc.creatorName,
         email: doc.creatorEmail,
       },
-      isOwnDocument: doc.userId === session.user.id,
+      isOwnDocument: doc.userId === session.user!.id,
     };
   });
 

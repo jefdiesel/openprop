@@ -221,7 +221,7 @@ export function DocumentsClient({
                 <SelectContent>
                   <SelectItem value="all">All team members</SelectItem>
                   <SelectItem value="mine">My documents</SelectItem>
-                  <SelectItem disabled className="font-semibold text-muted-foreground">
+                  <SelectItem value="_separator" disabled className="font-semibold text-muted-foreground">
                     ──────────
                   </SelectItem>
                   {teamMembers.map((member) => (

@@ -12,7 +12,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   try {
     // Only owners can change roles
-    const authCheck = await requireOrgPermission(orgId, "members:manage");
+    const authCheck = await requireOrgPermission(orgId, "members:update");
     if (!authCheck.authorized) {
       return NextResponse.json(
         { error: authCheck.error },
@@ -65,7 +65,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   const { id: orgId, userId: targetUserId } = await context.params;
 
   try {
-    const authCheck = await requireOrgPermission(orgId, "members:manage");
+    const authCheck = await requireOrgPermission(orgId, "members:remove");
     if (!authCheck.authorized) {
       return NextResponse.json(
         { error: authCheck.error },
