@@ -24,7 +24,7 @@ export default async function Image() {
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        {/* Logo */}
+        {/* Logo area */}
         <div
           style={{
             display: "flex",
@@ -33,18 +33,23 @@ export default async function Image() {
             marginBottom: 40,
           }}
         >
-          <svg
-            width="80"
-            height="80"
-            viewBox="0 0 32 32"
-            fill="none"
-            style={{ marginRight: 20 }}
+          {/* Paper airplane icon */}
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              backgroundColor: "white",
+              borderRadius: 16,
+              border: "2px solid #E4E4E7",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 24,
+              fontSize: 40,
+            }}
           >
-            <rect width="32" height="32" rx="8" fill="white" stroke="#E4E4E7" strokeWidth="1" />
-            <path d="M22.5 9.5L9.5 15L14 17L22.5 9.5Z" fill="#18181B" />
-            <path d="M22.5 9.5L14 17L16 21.5L22.5 9.5Z" fill="#18181B" />
-            <path d="M14 17L16 21.5L14 23L12 17.5L14 17Z" fill="#18181B" opacity="0.7" />
-          </svg>
+            ✈️
+          </div>
           <span
             style={{
               fontSize: 64,
@@ -64,7 +69,6 @@ export default async function Image() {
             color: "#52525B",
             marginBottom: 50,
             textAlign: "center",
-            maxWidth: 800,
           }}
         >
           Proposals, E-Signatures & Payments in One Workflow
@@ -74,33 +78,51 @@ export default async function Image() {
         <div
           style={{
             display: "flex",
-            gap: 40,
+            gap: 24,
           }}
         >
-          {["Drag & Drop Builder", "E-Signatures", "Payment Collection"].map(
-            (feature) => (
-              <div
-                key={feature}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  backgroundColor: "white",
-                  border: "1px solid #E4E4E7",
-                  padding: "12px 24px",
-                  borderRadius: 30,
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    fill="#22C55E"
-                  />
-                </svg>
-                <span style={{ color: "#18181B", fontSize: 18 }}>{feature}</span>
-              </div>
-            )
-          )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "white",
+              border: "1px solid #E4E4E7",
+              padding: "12px 24px",
+              borderRadius: 30,
+              fontSize: 18,
+              color: "#18181B",
+            }}
+          >
+            ✓ Drag & Drop Builder
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "white",
+              border: "1px solid #E4E4E7",
+              padding: "12px 24px",
+              borderRadius: 30,
+              fontSize: 18,
+              color: "#18181B",
+            }}
+          >
+            ✓ E-Signatures
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "white",
+              border: "1px solid #E4E4E7",
+              padding: "12px 24px",
+              borderRadius: 30,
+              fontSize: 18,
+              color: "#18181B",
+            }}
+          >
+            ✓ Payment Collection
+          </div>
         </div>
 
         {/* URL */}
@@ -112,7 +134,7 @@ export default async function Image() {
             color: "#71717A",
           }}
         >
-          openproposal.com
+          sendprop.com
         </div>
       </div>
     ),
