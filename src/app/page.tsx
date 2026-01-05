@@ -263,6 +263,7 @@ export default function Home() {
                     { text: "Drag & drop editor", coming: false },
                     { text: "Basic templates", coming: false },
                     { text: "Email notifications", coming: false },
+                    { text: "Community support", coming: false },
                   ].map((feature) => (
                     <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
@@ -281,14 +282,14 @@ export default function Home() {
               </CardFooter>
             </Card>
 
-            {/* Pro Plan */}
+            {/* Team Plan */}
             <Card className="relative border-green-600 shadow-lg">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-green-600">Most Popular</Badge>
               </div>
               <CardHeader>
-                <CardTitle>Pro</CardTitle>
-                <CardDescription>For growing businesses</CardDescription>
+                <CardTitle>Team</CardTitle>
+                <CardDescription>For small teams, hosted for you</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">$29</span>
                   <span className="text-zinc-500">/month</span>
@@ -300,13 +301,12 @@ export default function Home() {
               <CardContent>
                 <ul className="space-y-3">
                   {[
-                    { text: "Unlimited documents", coming: false },
                     { text: "Up to 10 team members", coming: false },
+                    { text: "5GB cloud storage", coming: false },
                     { text: "Payment collection (Stripe)", coming: false },
-                    { text: "Custom branding", coming: false },
                     { text: "Document reminders", coming: false },
-                    { text: "Blockchain verification", coming: false },
-                    { text: "CRM integrations", coming: true },
+                    { text: "Priority support", coming: false },
+                    { text: "Blockchain add-on ($19/mo)", coming: false },
                   ].map((feature) => (
                     <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
@@ -341,13 +341,13 @@ export default function Home() {
               <CardContent>
                 <ul className="space-y-3">
                   {[
-                    { text: "Everything in Pro", coming: false },
+                    { text: "Everything in Team", coming: false },
                     { text: "Unlimited team members", coming: false },
-                    { text: "25GB storage", coming: false },
-                    { text: "Priority support", coming: false },
-                    { text: "Remove branding", coming: true },
-                    { text: "Advanced analytics", coming: true },
-                    { text: "API access", coming: true },
+                    { text: "25GB cloud storage", coming: false },
+                    { text: "Remove OpenProposal branding", coming: true },
+                    { text: "Analytics dashboard", coming: true },
+                    { text: "CRM integrations", coming: true },
+                    { text: "API access", coming: false },
                   ].map((feature) => (
                     <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
