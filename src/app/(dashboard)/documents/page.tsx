@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { documents, recipients, profiles } from "@/lib/db/schema";
+import { documents, recipients, profiles, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc, sql, isNull, or } from "drizzle-orm";
 import { DocumentsClient } from "./documents-client";
 import { ExportDropdown } from "@/components/dashboard/export-dropdown";
@@ -27,9 +27,10 @@ export default async function DocumentsPage() {
   // Build query based on context
   // Team context: show all team documents
   // Personal context: show user's personal documents (no org)
-  const whereClause = profile?.currentOrganizationId
+  const isTeamContext = !!profile?.currentOrganizationId;
+  const whereClause = isTeamContext
     ? and(
-        eq(documents.organizationId, profile.currentOrganizationId),
+        eq(documents.organizationId, profile.currentOrganizationId!),
         eq(documents.isTemplate, false)
       )
     : and(
@@ -38,7 +39,44 @@ export default async function DocumentsPage() {
         eq(documents.isTemplate, false)
       );
 
-  // Fetch documents based on context
+  // Get user's role in the team (for admin filter)
+  let userRole: 'owner' | 'admin' | 'member' | null = null;
+  let teamMembers: { id: string; name: string | null; email: string }[] = [];
+
+  if (isTeamContext) {
+    const [membership] = await db
+      .select({ role: organizationMembers.role })
+      .from(organizationMembers)
+      .where(
+        and(
+          eq(organizationMembers.organizationId, profile.currentOrganizationId!),
+          eq(organizationMembers.userId, session.user.id),
+          eq(organizationMembers.status, 'active')
+        )
+      )
+      .limit(1);
+    userRole = membership?.role || null;
+
+    // Get team members for filter dropdown (admins/owners only)
+    if (userRole === 'owner' || userRole === 'admin') {
+      teamMembers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        })
+        .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(
+          and(
+            eq(organizationMembers.organizationId, profile.currentOrganizationId!),
+            eq(organizationMembers.status, 'active')
+          )
+        );
+    }
+  }
+
+  // Fetch documents based on context with creator info
   const userDocs = await db
     .select({
       id: documents.id,
@@ -47,8 +85,12 @@ export default async function DocumentsPage() {
       createdAt: documents.createdAt,
       updatedAt: documents.updatedAt,
       lockedAt: documents.lockedAt,
+      userId: documents.userId,
+      creatorName: users.name,
+      creatorEmail: users.email,
     })
     .from(documents)
+    .leftJoin(users, eq(documents.userId, users.id))
     .where(whereClause)
     .orderBy(desc(documents.updatedAt));
 
@@ -83,6 +125,12 @@ export default async function DocumentsPage() {
       lockedAt: doc.lockedAt,
       paymentStatus: recipient?.paymentStatus as "pending" | "processing" | "succeeded" | "failed" | "refunded" | null,
       paymentAmount: recipient?.paymentAmount || null,
+      createdBy: {
+        id: doc.userId,
+        name: doc.creatorName,
+        email: doc.creatorEmail,
+      },
+      isOwnDocument: doc.userId === session.user.id,
     };
   });
 
@@ -135,7 +183,13 @@ export default async function DocumentsPage() {
           </CardContent>
         </Card>
       ) : (
-        <DocumentsClient documents={docsWithRecipients} statusCounts={statusCounts} />
+        <DocumentsClient
+          documents={docsWithRecipients}
+          statusCounts={statusCounts}
+          isTeamContext={isTeamContext}
+          teamMembers={teamMembers}
+          canFilterByUser={userRole === 'owner' || userRole === 'admin'}
+        />
       )}
     </div>
   );

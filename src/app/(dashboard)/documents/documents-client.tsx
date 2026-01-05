@@ -3,8 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MoreHorizontal, Pencil, Copy, Send, Trash2, Eye } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, MoreHorizontal, Pencil, Copy, Send, Trash2, Eye, User, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -39,11 +46,26 @@ interface Document {
   lockedAt: Date | null;
   paymentStatus?: PaymentStatus;
   paymentAmount?: number | null;
+  createdBy?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  };
+  isOwnDocument?: boolean;
+}
+
+interface TeamMember {
+  id: string;
+  name: string | null;
+  email: string;
 }
 
 interface DocumentsClientProps {
   documents: Document[];
   statusCounts: Record<string, number>;
+  isTeamContext?: boolean;
+  teamMembers?: TeamMember[];
+  canFilterByUser?: boolean;
 }
 
 type TabValue = "all" | DocumentStatus;
@@ -96,13 +118,33 @@ function getActivityLabel(status: DocumentStatus): string {
   }
 }
 
-export function DocumentsClient({ documents, statusCounts }: DocumentsClientProps) {
+export function DocumentsClient({
+  documents,
+  statusCounts,
+  isTeamContext = false,
+  teamMembers = [],
+  canFilterByUser = false,
+}: DocumentsClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeTab, setActiveTab] = React.useState<TabValue>("all");
+  const [userFilter, setUserFilter] = React.useState<string>("all");
+
+  // Split docs into "mine" and "team" for team context
+  const myDocuments = React.useMemo(
+    () => documents.filter((doc) => doc.isOwnDocument),
+    [documents]
+  );
 
   const filteredDocuments = React.useMemo(() => {
     let docs = documents;
+
+    // Filter by user (for admins)
+    if (userFilter === "mine") {
+      docs = docs.filter((doc) => doc.isOwnDocument);
+    } else if (userFilter !== "all") {
+      docs = docs.filter((doc) => doc.createdBy?.id === userFilter);
+    }
 
     if (activeTab !== "all") {
       docs = docs.filter((doc) => doc.status === activeTab);
@@ -114,12 +156,14 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
         (doc) =>
           doc.title.toLowerCase().includes(query) ||
           doc.recipient.name.toLowerCase().includes(query) ||
-          doc.recipient.email.toLowerCase().includes(query)
+          doc.recipient.email.toLowerCase().includes(query) ||
+          doc.createdBy?.name?.toLowerCase().includes(query) ||
+          doc.createdBy?.email?.toLowerCase().includes(query)
       );
     }
 
     return docs;
-  }, [documents, activeTab, searchQuery]);
+  }, [documents, activeTab, searchQuery, userFilter]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
@@ -150,15 +194,53 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
     <Card>
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>All Documents</CardTitle>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              {isTeamContext ? (
+                <>
+                  <Users className="h-5 w-5" />
+                  Team Documents
+                </>
+              ) : (
+                "All Documents"
+              )}
+            </CardTitle>
+            {isTeamContext && (
+              <CardDescription>
+                {myDocuments.length} created by you, {documents.length - myDocuments.length} by teammates
+              </CardDescription>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {isTeamContext && canFilterByUser && teamMembers.length > 0 && (
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <User className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter by creator" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All team members</SelectItem>
+                  <SelectItem value="mine">My documents</SelectItem>
+                  <SelectItem disabled className="font-semibold text-muted-foreground">
+                    ──────────
+                  </SelectItem>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name || member.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -184,6 +266,7 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
                 <TableHeader>
                   <TableRow>
                     <TableHead>Document</TableHead>
+                    {isTeamContext && <TableHead>Created by</TableHead>}
                     <TableHead>Recipient</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Activity</TableHead>
@@ -205,6 +288,19 @@ export function DocumentsClient({ documents, statusCounts }: DocumentsClientProp
                           {doc.title}
                         </Link>
                       </TableCell>
+                      {isTeamContext && (
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {doc.isOwnDocument ? (
+                              <Badge variant="secondary" className="text-xs">You</Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                {doc.createdBy?.name || doc.createdBy?.email || "Unknown"}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell>
                         {doc.recipient.name || doc.recipient.email ? (
                           <div>

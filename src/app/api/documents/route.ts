@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { documents, profiles } from '@/lib/db/schema'
+import { documents, profiles, users } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { eq, and, desc, asc, ilike, sql, count, isNull } from 'drizzle-orm'
 import * as z from 'zod'
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const isTemplate = searchParams.get('is_template')
     const search = searchParams.get('search')
+    const createdByUserId = searchParams.get('created_by') // Filter by creator (for admins)
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
     const sortBy = searchParams.get('sort_by') || 'updated_at'
@@ -74,6 +75,11 @@ export async function GET(request: NextRequest) {
       conditions.push(ilike(documents.title, `%${search}%`))
     }
 
+    // Filter by creator (for team admins)
+    if (createdByUserId && profile?.currentOrganizationId) {
+      conditions.push(eq(documents.userId, createdByUserId))
+    }
+
     // Determine sort column and order
     const validSortColumns = ['createdAt', 'updatedAt', 'title', 'status'] as const
     type SortColumn = typeof validSortColumns[number]
@@ -86,10 +92,30 @@ export async function GET(request: NextRequest) {
     const column = columnMap[sortBy] || 'updatedAt'
     const orderFn = sortOrder === 'asc' ? asc : desc
 
-    // Query documents with pagination
+    // Query documents with creator info
     const [docs, [{ total }]] = await Promise.all([
-      db.select()
+      db.select({
+        id: documents.id,
+        userId: documents.userId,
+        organizationId: documents.organizationId,
+        title: documents.title,
+        status: documents.status,
+        content: documents.content,
+        variables: documents.variables,
+        settings: documents.settings,
+        isTemplate: documents.isTemplate,
+        templateCategory: documents.templateCategory,
+        createdAt: documents.createdAt,
+        updatedAt: documents.updatedAt,
+        sentAt: documents.sentAt,
+        expiresAt: documents.expiresAt,
+        blockchainTxHash: documents.blockchainTxHash,
+        blockchainVerifiedAt: documents.blockchainVerifiedAt,
+        creatorName: users.name,
+        creatorEmail: users.email,
+      })
         .from(documents)
+        .leftJoin(users, eq(documents.userId, users.id))
         .where(and(...conditions))
         .orderBy(orderFn(documents[column]))
         .limit(limit)
@@ -117,6 +143,12 @@ export async function GET(request: NextRequest) {
       // Blockchain verification fields
       blockchain_tx_hash: doc.blockchainTxHash || null,
       blockchain_verified_at: doc.blockchainVerifiedAt?.toISOString() || null,
+      // Creator info
+      created_by: {
+        id: doc.userId,
+        name: doc.creatorName,
+        email: doc.creatorEmail,
+      },
     }))
 
     return NextResponse.json({
