@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { documents, documentEvents, profiles } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
-import { eq, and, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import * as z from 'zod'
+import { canAccessDocument } from '@/lib/document-access'
 
 // Schema for duplicating a document
 const duplicateDocumentSchema = z.object({
@@ -50,17 +51,19 @@ export async function POST(
       // Body is optional, ignore parsing errors
     }
 
-    // Fetch original document (user's own or team's)
-    const ownerCondition = profile?.currentOrganizationId
-      ? or(
-          eq(documents.userId, userId),
-          eq(documents.organizationId, profile.currentOrganizationId)
-        )
-      : eq(documents.userId, userId)
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      )
+    }
 
+    // Fetch original document
     const [originalDoc] = await db.select()
       .from(documents)
-      .where(and(eq(documents.id, id), ownerCondition))
+      .where(eq(documents.id, id))
       .limit(1)
 
     if (!originalDoc) {

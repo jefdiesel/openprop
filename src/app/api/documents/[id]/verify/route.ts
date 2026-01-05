@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { documents, recipients, documentEvents, payments } from '@/lib/db/schema';
 import { auth } from '@/lib/auth';
 import { eq, and } from 'drizzle-orm';
+import { canAccessDocument } from '@/lib/document-access';
 import {
   isBlockchainConfigured,
   hashDocumentData,
@@ -37,9 +38,18 @@ export async function GET(
       );
     }
 
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      );
+    }
+
     const [document] = await db.select()
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .limit(1);
 
     if (!document) {
@@ -138,9 +148,18 @@ export async function POST(
       );
     }
 
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      );
+    }
+
     const [document] = await db.select()
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .limit(1);
 
     if (!document) {

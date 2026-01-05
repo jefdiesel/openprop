@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { documents, documentVersions, users } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
+import { canAccessDocument } from '@/lib/document-access'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -25,7 +26,16 @@ export async function GET(
       )
     }
 
-    // Check if document exists and belongs to user
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get document details
     const [document] = await db.select({
       id: documents.id,
       title: documents.title,
@@ -34,7 +44,7 @@ export async function GET(
       status: documents.status,
     })
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .limit(1)
 
     if (!document) {

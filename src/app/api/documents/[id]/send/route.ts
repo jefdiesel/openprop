@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { documents, recipients, documentEvents, users, profiles, documentVersions } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { eq, and } from 'drizzle-orm'
+import { canAccessDocument } from '@/lib/document-access'
 import * as z from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import type { DocumentSettings } from '@/types/database'
@@ -73,10 +74,19 @@ export async function POST(
 
     const { recipients: recipientList, message, expires_in_days } = validationResult.data
 
-    // Check if document exists and belongs to user
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      )
+    }
+
+    // Fetch full document
     const [document] = await db.select()
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .limit(1)
 
     if (!document) {
