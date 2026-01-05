@@ -301,8 +301,8 @@ export default function Home() {
                 <ul className="space-y-3">
                   {[
                     { text: "Unlimited documents", coming: false },
+                    { text: "Up to 10 team members", coming: false },
                     { text: "Payment collection (Stripe)", coming: false },
-                    { text: "Team collaboration", coming: false },
                     { text: "Custom branding", coming: false },
                     { text: "Document reminders", coming: false },
                     { text: "Blockchain verification", coming: false },
