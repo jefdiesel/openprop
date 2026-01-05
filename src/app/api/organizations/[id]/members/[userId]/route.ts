@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateMemberRole, removeMember, getUserRole } from "@/lib/organizations";
 import { requireOrgPermission } from "@/lib/permissions";
+import { updateMemberRole, removeMember, getUserRole } from "@/lib/organizations";
+
+type RouteContext = {
+  params: Promise<{ id: string; userId: string }>;
+};
 
 // PUT /api/organizations/[id]/members/[userId] - Update member role
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ id: string; userId: string }> }
-) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   const { id: orgId, userId: targetUserId } = await context.params;
+
   try {
-    const authCheck = await requireOrgPermission(orgId, "members:update");
+    // Only owners can change roles
+    const authCheck = await requireOrgPermission(orgId, "members:manage");
     if (!authCheck.authorized) {
       return NextResponse.json(
         { error: authCheck.error },
@@ -17,62 +20,52 @@ export async function PUT(
       );
     }
 
-    // Get target user's current role
-    const targetRole = await getUserRole(orgId, targetUserId);
-    if (!targetRole) {
-      return NextResponse.json(
-        { error: "Member not found" },
-        { status: 404 }
-      );
-    }
-
-    // Cannot change owner's role
-    if (targetRole === "owner") {
-      return NextResponse.json(
-        { error: "Cannot change the owner's role" },
-        { status: 403 }
-      );
-    }
-
-    // Admins cannot promote to admin (only owners can)
     const body = await request.json();
-    const { role: newRole } = body;
+    const { role } = body;
 
-    if (!["admin", "member"].includes(newRole)) {
+    if (!["admin", "member"].includes(role)) {
       return NextResponse.json(
         { error: "Invalid role. Must be 'admin' or 'member'" },
         { status: 400 }
       );
     }
 
-    // Only owner can promote to admin
-    if (newRole === "admin" && authCheck.role !== "owner") {
+    // Check if current user is owner (only owners can change roles)
+    const currentUserRole = await getUserRole(orgId, authCheck.userId!);
+    if (currentUserRole !== "owner") {
       return NextResponse.json(
-        { error: "Only the owner can promote members to admin" },
+        { error: "Only owners can change member roles" },
         { status: 403 }
       );
     }
 
-    await updateMemberRole(orgId, targetUserId, newRole);
+    // Can't change owner's role
+    const targetUserRole = await getUserRole(orgId, targetUserId);
+    if (targetUserRole === "owner") {
+      return NextResponse.json(
+        { error: "Cannot change owner's role" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ success: true, role: newRole });
+    await updateMemberRole(orgId, targetUserId, role);
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating member:", error);
+    console.error("Error updating member role:", error);
     return NextResponse.json(
-      { error: "Failed to update member" },
+      { error: "Failed to update member role" },
       { status: 500 }
     );
   }
 }
 
 // DELETE /api/organizations/[id]/members/[userId] - Remove member
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string; userId: string }> }
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   const { id: orgId, userId: targetUserId } = await context.params;
+
   try {
-    const authCheck = await requireOrgPermission(orgId, "members:remove");
+    const authCheck = await requireOrgPermission(orgId, "members:manage");
     if (!authCheck.authorized) {
       return NextResponse.json(
         { error: authCheck.error },
@@ -80,37 +73,31 @@ export async function DELETE(
       );
     }
 
-    // Get target user's current role
-    const targetRole = await getUserRole(orgId, targetUserId);
-    if (!targetRole) {
+    // Check roles
+    const currentUserRole = await getUserRole(orgId, authCheck.userId!);
+    const targetUserRole = await getUserRole(orgId, targetUserId);
+
+    // Can't remove owner
+    if (targetUserRole === "owner") {
       return NextResponse.json(
-        { error: "Member not found" },
-        { status: 404 }
+        { error: "Cannot remove the owner" },
+        { status: 400 }
       );
     }
 
-    // Cannot remove owner
-    if (targetRole === "owner") {
+    // Admins can only remove members, not other admins
+    if (currentUserRole === "admin" && targetUserRole === "admin") {
       return NextResponse.json(
-        { error: "Cannot remove the owner. Transfer ownership first." },
+        { error: "Admins cannot remove other admins" },
         { status: 403 }
       );
     }
 
-    // Admins cannot remove other admins (only owner can)
-    if (targetRole === "admin" && authCheck.role !== "owner") {
+    // Can't remove yourself (use leave team instead)
+    if (targetUserId === authCheck.userId) {
       return NextResponse.json(
-        { error: "Only the owner can remove admins" },
-        { status: 403 }
-      );
-    }
-
-    // User can remove themselves (leave org)
-    const isSelf = targetUserId === authCheck.userId;
-    if (!isSelf && authCheck.role === "member") {
-      return NextResponse.json(
-        { error: "Members can only remove themselves" },
-        { status: 403 }
+        { error: "Cannot remove yourself. Use leave team instead." },
+        { status: 400 }
       );
     }
 
