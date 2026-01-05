@@ -1,10 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { documents, recipients, documentEvents, payments, documentVersions } from '@/lib/db/schema'
+import { documents, recipients, documentEvents, payments, documentVersions, profiles, organizationMembers } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
-import { eq, and, asc } from 'drizzle-orm'
+import { eq, and, asc, or } from 'drizzle-orm'
 import * as z from 'zod'
 import type { Block } from '@/types/database'
+
+// Helper to check if user can access a document (owner or same org member)
+async function canAccessDocument(userId: string, documentId: string) {
+  // Get user's current org
+  const [profile] = await db
+    .select({ currentOrganizationId: profiles.currentOrganizationId })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+
+  // Get document
+  const [doc] = await db
+    .select({
+      id: documents.id,
+      userId: documents.userId,
+      organizationId: documents.organizationId
+    })
+    .from(documents)
+    .where(eq(documents.id, documentId))
+    .limit(1);
+
+  if (!doc) return { allowed: false, document: null };
+
+  // Owner can always access
+  if (doc.userId === userId) return { allowed: true, document: doc };
+
+  // Check if doc belongs to an org the user is a member of
+  if (doc.organizationId) {
+    const [membership] = await db
+      .select({ id: organizationMembers.id })
+      .from(organizationMembers)
+      .where(
+        and(
+          eq(organizationMembers.organizationId, doc.organizationId),
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.status, 'active')
+        )
+      )
+      .limit(1);
+
+    if (membership) return { allowed: true, document: doc };
+  }
+
+  return { allowed: false, document: null };
+}
 
 // Schema for updating a document
 const updateDocumentSchema = z.object({
@@ -91,18 +136,20 @@ export async function GET(
       )
     }
 
-    // Fetch document
-    const [document] = await db.select()
-      .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
-      .limit(1)
-
-    if (!document) {
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
       return NextResponse.json(
         { error: 'Document not found' },
         { status: 404 }
       )
     }
+
+    // Fetch full document
+    const [document] = await db.select()
+      .from(documents)
+      .where(eq(documents.id, id))
+      .limit(1)
 
     // Optionally fetch recipients
     const { searchParams } = new URL(request.url)
@@ -161,7 +208,16 @@ export async function PUT(
       )
     }
 
-    // Check if document exists and belongs to user
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get full document details
     const [existingDoc] = await db.select({
       id: documents.id,
       status: documents.status,
@@ -172,7 +228,7 @@ export async function PUT(
       variables: documents.variables,
     })
       .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .limit(1)
 
     if (!existingDoc) {
@@ -263,10 +319,10 @@ export async function PUT(
       }
     }
 
-    // Update document
+    // Update document (access already verified above)
     const [document] = await db.update(documents)
       .set(updateData)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+      .where(eq(documents.id, id))
       .returning()
 
     if (!document) {
@@ -307,13 +363,9 @@ export async function DELETE(
       )
     }
 
-    // Check if document exists and belongs to user
-    const [existingDoc] = await db.select({ id: documents.id })
-      .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
-      .limit(1)
-
-    if (!existingDoc) {
+    // Check access (owner or team member)
+    const access = await canAccessDocument(userId, id);
+    if (!access.allowed) {
       return NextResponse.json(
         { error: 'Document not found' },
         { status: 404 }
@@ -329,9 +381,8 @@ export async function DELETE(
     // Delete associated payments
     await db.delete(payments).where(eq(payments.documentId, id))
 
-    // Delete document
-    await db.delete(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+    // Delete document (access already verified above)
+    await db.delete(documents).where(eq(documents.id, id))
 
     return NextResponse.json({ success: true })
   } catch (error) {
