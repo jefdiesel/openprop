@@ -198,13 +198,13 @@ export default function Home() {
               <tbody>
                 {[
                   { feature: "Unlimited users", pandadoc: false, op: true },
-                  { feature: "Unlimited documents", pandadoc: false, op: true },
-                  { feature: "Unlimited signatures", pandadoc: false, op: true },
-                  { feature: "Custom branding", pandadoc: "Enterprise", op: "Business" },
-                  { feature: "API access", pandadoc: "Enterprise", op: "All plans" },
-                  { feature: "Export templates", pandadoc: false, op: true },
-                  { feature: "Payment collection", pandadoc: true, op: true },
-                  { feature: "Analytics", pandadoc: true, op: true },
+                  { feature: "Unlimited documents", pandadoc: false, op: "Pro+" },
+                  { feature: "E-signatures", pandadoc: true, op: true },
+                  { feature: "Custom branding", pandadoc: "Enterprise", op: "Pro+" },
+                  { feature: "Payment collection", pandadoc: "Add-on", op: "Pro+" },
+                  { feature: "Team collaboration", pandadoc: true, op: true },
+                  { feature: "Blockchain verification", pandadoc: false, op: "Pro+" },
+                  { feature: "Document reminders", pandadoc: true, op: "Pro+" },
                 ].map((row) => (
                   <tr key={row.feature} className="border-b last:border-0">
                     <td className="py-4">{row.feature}</td>
@@ -258,15 +258,16 @@ export default function Home() {
               <CardContent>
                 <ul className="space-y-3">
                   {[
-                    "Up to 5 documents/month",
-                    "Unlimited signatures",
-                    "Basic templates",
-                    "Email support",
-                    "Secure document storage",
+                    { text: "3 documents/month", coming: false },
+                    { text: "E-signatures", coming: false },
+                    { text: "Drag & drop editor", coming: false },
+                    { text: "Basic templates", coming: false },
+                    { text: "Email notifications", coming: false },
                   ].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
+                    <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
-                      {feature}
+                      {feature.text}
+                      {feature.coming && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Soon</Badge>}
                     </li>
                   ))}
                 </ul>
@@ -299,16 +300,18 @@ export default function Home() {
               <CardContent>
                 <ul className="space-y-3">
                   {[
-                    "Unlimited documents",
-                    "Unlimited users",
-                    "Custom branding",
-                    "Payment collection",
-                    "Priority support",
-                    "API access",
+                    { text: "Unlimited documents", coming: false },
+                    { text: "Payment collection (Stripe)", coming: false },
+                    { text: "Team collaboration", coming: false },
+                    { text: "Custom branding", coming: false },
+                    { text: "Document reminders", coming: false },
+                    { text: "Blockchain verification", coming: false },
+                    { text: "CRM integrations", coming: true },
                   ].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
+                    <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
-                      {feature}
+                      {feature.text}
+                      {feature.coming && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Soon</Badge>}
                     </li>
                   ))}
                 </ul>
@@ -338,16 +341,18 @@ export default function Home() {
               <CardContent>
                 <ul className="space-y-3">
                   {[
-                    "Everything in Pro",
-                    "Remove OpenProposal branding",
-                    "Multiple workspaces",
-                    "Advanced analytics",
-                    "Zapier integrations",
-                    "Dedicated support",
+                    { text: "Everything in Pro", coming: false },
+                    { text: "Unlimited team members", coming: false },
+                    { text: "25GB storage", coming: false },
+                    { text: "Priority support", coming: false },
+                    { text: "Remove branding", coming: true },
+                    { text: "Advanced analytics", coming: true },
+                    { text: "API access", coming: true },
                   ].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
+                    <li key={feature.text} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600" />
-                      {feature}
+                      {feature.text}
+                      {feature.coming && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Soon</Badge>}
                     </li>
                   ))}
                 </ul>

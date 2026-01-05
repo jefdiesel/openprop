@@ -18,8 +18,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://sendprop.com";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "SendProp - Proposals, E-Signatures & Payments in One Workflow",
-    template: "%s | SendProp",
+    default: "OpenProposal - Proposals, E-Signatures & Payments in One Workflow",
+    template: "%s | OpenProposal",
   },
   description:
     "Create beautiful proposals with drag-and-drop, get legally binding e-signatures, and collect payments - all in one seamless workflow. No more switching between tools.",
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     "digital contracts",
     "business proposals",
   ],
-  authors: [{ name: "SendProp" }],
-  creator: "SendProp",
-  publisher: "SendProp",
+  authors: [{ name: "OpenProposal" }],
+  creator: "OpenProposal",
+  publisher: "OpenProposal",
   robots: {
     index: true,
     follow: true,
@@ -54,26 +54,17 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: BASE_URL,
-    siteName: "SendProp",
-    title: "SendProp - Proposals, E-Signatures & Payments in One Workflow",
+    siteName: "OpenProposal",
+    title: "OpenProposal - Proposals, E-Signatures & Payments in One Workflow",
     description:
       "Create beautiful proposals with drag-and-drop, get legally binding e-signatures, and collect payments - all in one seamless workflow.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "SendProp - Proposals, Signatures & Payments",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SendProp - Proposals, E-Signatures & Payments in One Workflow",
+    title: "OpenProposal - Proposals, E-Signatures & Payments in One Workflow",
     description:
       "Create beautiful proposals with drag-and-drop, get legally binding e-signatures, and collect payments - all in one seamless workflow.",
-    images: ["/og-image.png"],
-    creator: "@sendprop",
+    creator: "@openproposal",
   },
   icons: {
     icon: "/favicon.ico",
@@ -90,7 +81,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "SendProp",
+  name: "OpenProposal",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description:
@@ -101,11 +92,6 @@ const jsonLd = {
     price: "0",
     priceCurrency: "USD",
     description: "Free tier available",
-  },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "150",
   },
   featureList: [
     "Drag-and-drop proposal builder",
