@@ -10,7 +10,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Trash2, GripVertical, Upload, ImageIcon, CreditCard, Clock, DollarSign, MessageCircle } from "lucide-react"
+import { Trash2, GripVertical, Upload, ImageIcon, CreditCard, Clock, DollarSign, MessageCircle, Eye } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,8 @@ import {
   DataURIBlockData,
 } from "@/hooks/use-builder"
 import { FileCode2 } from "lucide-react"
+import { ConditionBuilder } from "./condition-builder"
+import { ConditionGroup } from "@/types/blocks"
 
 // Block Renderers
 function TextBlockRenderer({
@@ -583,6 +585,8 @@ function SortableBlockItem({
   onUpdate,
   onCommentClick,
   commentCount,
+  pricingItems,
+  onConditionChange,
 }: {
   block: Block
   isSelected: boolean
@@ -591,6 +595,8 @@ function SortableBlockItem({
   onUpdate: (data: Record<string, unknown>) => void
   onCommentClick?: () => void
   commentCount?: number
+  pricingItems: Array<{ id: string; name: string }>
+  onConditionChange: (blockId: string, condition: ConditionGroup | undefined) => void
 }) {
   const {
     attributes,
@@ -636,7 +642,7 @@ function SortableBlockItem({
         </button>
       </div>
 
-      {/* Comment & Delete Buttons */}
+      {/* Comment, Condition & Delete Buttons */}
       <div
         className={cn(
           "absolute -right-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
@@ -661,6 +667,26 @@ function SortableBlockItem({
             )}
           </Button>
         )}
+        <ConditionBuilder
+          condition={block.visibility?.condition}
+          onChange={(condition) => onConditionChange(block.id, condition)}
+          pricingItems={pricingItems}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className={cn(
+                "text-muted-foreground hover:text-primary",
+                block.visibility?.condition && "text-primary"
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          }
+        />
         <Button
           variant="ghost"
           size="icon-sm"
@@ -782,6 +808,29 @@ export function DocumentCanvas({
 } = {}) {
   const { state, selectBlock, removeBlock, updateBlock } = useBuilder()
 
+  // Extract pricing items from all pricing-table blocks
+  const pricingItems = useMemo(() => {
+    const items: Array<{ id: string; name: string }> = []
+    state.blocks.forEach((block) => {
+      if (block.type === "pricing-table") {
+        const pricingData = block.data as PricingTableBlockData
+        pricingData.items.forEach((item) => {
+          items.push({ id: item.id, name: item.description || item.id })
+        })
+      }
+    })
+    return items
+  }, [state.blocks])
+
+  const handleConditionChange = useCallback((blockId: string, condition: ConditionGroup | undefined) => {
+    updateBlock(blockId, {
+      visibility: {
+        condition,
+        showInEditor: true,
+      }
+    } as Record<string, unknown>)
+  }, [updateBlock])
+
   const handleCanvasClick = useCallback(() => {
     selectBlock(null)
   }, [selectBlock])
@@ -815,6 +864,8 @@ export function DocumentCanvas({
                     onUpdate={(data) => updateBlock(block.id, data)}
                     onCommentClick={onBlockCommentClick ? () => onBlockCommentClick(block.id) : undefined}
                     commentCount={blockCommentCounts?.[block.id] || 0}
+                    pricingItems={pricingItems}
+                    onConditionChange={handleConditionChange}
                   />
                 ))}
               </div>

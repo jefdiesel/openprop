@@ -23,12 +23,35 @@ export type SpacerSize = "small" | "medium" | "large";
 
 export type SignatureType = "draw" | "type";
 
+// Condition operators
+export type ConditionOperator = '==' | '!=' | '>' | '<' | '>=' | '<=';
+
+// Single condition rule
+export interface ConditionRule {
+  field: string;  // e.g., "pricing.item_abc.isSelected", "pricing.total"
+  operator: ConditionOperator;
+  value: string | number | boolean;
+}
+
+// Condition group with AND/OR logic
+export interface ConditionGroup {
+  logic: 'AND' | 'OR';
+  rules: (ConditionRule | ConditionGroup)[];
+}
+
+// Block visibility settings
+export interface BlockVisibility {
+  condition?: ConditionGroup;
+  showInEditor?: boolean;  // Always show in editor even if condition fails (default true)
+}
+
 // Base block interface
 export interface BlockBase {
   id: string;
   type: BlockType;
   createdAt?: string;
   updatedAt?: string;
+  visibility?: BlockVisibility;
 }
 
 // Text Block

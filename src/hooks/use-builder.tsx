@@ -119,6 +119,10 @@ export interface Block {
   id: string
   type: BlockType
   data: BlockData
+  visibility?: {
+    condition?: import('@/types/blocks').ConditionGroup;
+    showInEditor?: boolean;
+  }
 }
 
 // Builder State
@@ -142,7 +146,7 @@ type BuilderAction =
   | { type: "SET_TITLE"; payload: string }
   | { type: "ADD_BLOCK"; payload: { block: Block; index?: number } }
   | { type: "REMOVE_BLOCK"; payload: string }
-  | { type: "UPDATE_BLOCK"; payload: { id: string; data: Partial<BlockData> } }
+  | { type: "UPDATE_BLOCK"; payload: { id: string; data: Partial<BlockData> | { visibility?: Block['visibility'] } } }
   | { type: "MOVE_BLOCK"; payload: { activeId: string; overId: string } }
   | { type: "SELECT_BLOCK"; payload: string | null }
   | { type: "SET_SAVING"; payload: boolean }
@@ -280,7 +284,16 @@ function builderReducer(draft: BuilderState, action: BuilderAction) {
       saveHistory()
       const blockToUpdate = draft.blocks.find((b) => b.id === action.payload.id)
       if (blockToUpdate) {
-        blockToUpdate.data = { ...blockToUpdate.data, ...action.payload.data } as BlockData
+        // Handle visibility updates separately from data
+        if ('visibility' in action.payload.data) {
+          blockToUpdate.visibility = action.payload.data.visibility as Block['visibility']
+          const { visibility, ...rest } = action.payload.data
+          if (Object.keys(rest).length > 0) {
+            blockToUpdate.data = { ...blockToUpdate.data, ...rest } as BlockData
+          }
+        } else {
+          blockToUpdate.data = { ...blockToUpdate.data, ...action.payload.data } as BlockData
+        }
       }
       draft.isDirty = true
       break
@@ -408,7 +421,7 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
   )
 
   const updateBlock = useCallback(
-    (id: string, data: Partial<BlockData>) => {
+    (id: string, data: Partial<BlockData> | { visibility?: Block['visibility'] }) => {
       dispatch({ type: "UPDATE_BLOCK", payload: { id, data } })
     },
     [dispatch]
