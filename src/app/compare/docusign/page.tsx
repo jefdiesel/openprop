@@ -21,8 +21,10 @@ const comparisonData = [
     category: "Pricing",
     items: [
       { feature: "Free plan available", sendprop: true, docusign: false },
-      { feature: "Pro plan price", sendprop: "$12/mo", docusign: "$15/mo" },
-      { feature: "Business plan price", sendprop: "$29/mo", docusign: "$45/mo" },
+      { feature: "Starter plan", sendprop: "$0/mo", docusign: "N/A" },
+      { feature: "Team plan", sendprop: "$29/mo flat", docusign: "$45/mo per user" },
+      { feature: "Business plan", sendprop: "$99/mo flat", docusign: "$65/mo per user" },
+      { feature: "Per-user pricing", sendprop: false, docusign: true },
       { feature: "No per-envelope fees", sendprop: true, docusign: false },
       { feature: "Unlimited templates", sendprop: true, docusign: "5 on basic" },
     ],
@@ -60,9 +62,9 @@ const comparisonData = [
 
 const switchReasons = [
   {
-    title: "70% lower costs",
+    title: "Save 85%+ with flat-rate pricing",
     description:
-      "DocuSign charges per envelope and adds fees for every feature. SendProp includes everything in one simple price.",
+      "DocuSign charges $45-65 per user monthly. SendProp is just $29-99/mo flat for your entire team. A 5-person team saves $2,000+ per year.",
   },
   {
     title: "Proposals + Signatures + Payments",

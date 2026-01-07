@@ -20,11 +20,13 @@ const comparisonData = [
   {
     category: "Pricing",
     items: [
-      { feature: "Free plan available", sendprop: true, pandadoc: false },
-      { feature: "Essentials/Pro price", sendprop: "$12/mo", pandadoc: "$35/mo" },
-      { feature: "Business plan price", sendprop: "$29/mo", pandadoc: "$65/mo" },
-      { feature: "Payment collection", sendprop: "Included", pandadoc: "$15/mo add-on" },
-      { feature: "Annual discount", sendprop: "2 months free", pandadoc: "~10%" },
+      { feature: "Free plan available", sendprop: true, pandadoc: true },
+      { feature: "Starter plan price", sendprop: "$0/mo (3 docs)", pandadoc: "$0/mo (limited)" },
+      { feature: "Team plan price", sendprop: "$29/mo flat", pandadoc: "$35/mo per user" },
+      { feature: "Business plan price", sendprop: "$99/mo flat", pandadoc: "$65/mo per user" },
+      { feature: "Per-user pricing", sendprop: false, pandadoc: true },
+      { feature: "Payment collection", sendprop: "Included", pandadoc: "Add-on cost" },
+      { feature: "Early bird discount", sendprop: "Up to 50% off", pandadoc: "~10% annual" },
     ],
   },
   {
@@ -61,24 +63,24 @@ const comparisonData = [
 
 const switchReasons = [
   {
-    title: "50% lower price",
+    title: "Flat-rate pricing, not per-user",
     description:
-      "PandaDoc starts at $35/month. SendProp Pro is just $12/month with all the same proposal features.",
+      "PandaDoc charges $35-65/month per user. SendProp is $29-99/month flat for unlimited team members (Team: up to 10, Business: unlimited).",
   },
   {
     title: "Payments included",
     description:
-      "PandaDoc charges $15/month extra for payment collection. SendProp includes it in every paid plan.",
+      "PandaDoc charges extra for payment collection. SendProp includes it in every paid plan at no additional cost.",
   },
   {
-    title: "Free tier for starters",
+    title: "Early bird pricing",
     description:
-      "PandaDoc has no free plan. SendProp lets you start free and upgrade when you're ready.",
+      "Get SendProp Team for just $15/month (50% off) or Business for $50/month (50% off) with early bird pricing.",
   },
   {
     title: "Simpler, faster",
     description:
-      "PandaDoc has powerful features but can feel overwhelming. SendProp keeps things simple and focused.",
+      "PandaDoc has powerful features but can feel overwhelming. SendProp keeps things simple and focused on what matters most.",
   },
 ];
 
@@ -124,11 +126,11 @@ export default function PandaDocComparisonPage() {
             <div className="text-4xl font-bold text-muted-foreground">PandaDoc</div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-6">
-            All the proposal power, half the price
+            All the proposal power, flat-rate pricing
           </h1>
           <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-8">
-            Love PandaDoc&apos;s features but not the price? SendProp gives you drag-and-drop
-            proposals, e-signatures, and payments - all for less than PandaDoc&apos;s base plan.
+            Love PandaDoc&apos;s features but not the per-user pricing? SendProp gives you drag-and-drop
+            proposals, e-signatures, and payments with flat-rate team pricing. No per-user charges.
           </p>
           <div className="flex justify-center gap-4">
             <Button size="lg" asChild>
@@ -142,27 +144,41 @@ export default function PandaDocComparisonPage() {
 
         {/* Price Comparison */}
         <section className="container pb-16">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <Card className="border-2 border-primary">
               <CardHeader className="text-center">
-                <CardTitle>Annual Cost Comparison</CardTitle>
+                <CardTitle>Annual Cost Comparison (5-person team)</CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  See how flat-rate pricing saves you money as your team grows
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-8 text-center">
                   <div>
                     <div className="text-sm text-muted-foreground mb-2">PandaDoc Business</div>
-                    <div className="text-3xl font-bold">$780/yr</div>
-                    <div className="text-sm text-muted-foreground">+ $180/yr for payments</div>
-                    <div className="text-lg font-semibold mt-2">= $960/year</div>
+                    <div className="text-2xl font-bold">$65/mo × 5 users</div>
+                    <div className="text-lg text-muted-foreground mt-1">= $325/month</div>
+                    <div className="text-sm text-muted-foreground mt-2">+ payment add-on costs</div>
+                    <div className="text-xl font-semibold mt-3 text-red-600">$3,900/year</div>
                   </div>
                   <div className="border-l pl-8">
                     <div className="text-sm text-muted-foreground mb-2">SendProp Business</div>
-                    <div className="text-3xl font-bold text-green-600">$290/yr</div>
-                    <div className="text-sm text-muted-foreground">payments included</div>
-                    <div className="text-lg font-semibold mt-2 text-green-600">
-                      Save $670/year
+                    <div className="text-2xl font-bold text-green-600">$99/mo flat</div>
+                    <div className="text-lg text-muted-foreground mt-1">unlimited team</div>
+                    <div className="text-sm text-muted-foreground mt-2">payments included</div>
+                    <div className="text-xl font-semibold mt-3 text-green-600">$1,188/year</div>
+                    <div className="text-sm font-semibold text-green-600 mt-2">
+                      ($600/yr with early bird)
                     </div>
                   </div>
+                </div>
+                <div className="mt-6 pt-6 border-t text-center">
+                  <div className="text-lg font-bold text-green-600">
+                    Save $2,712/year (or $3,300/year with early bird pricing!)
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Savings increase with every team member you add
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -296,11 +312,11 @@ export default function PandaDocComparisonPage() {
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Ready to save $670+ per year?
+                Ready to save $2,700+ per year?
               </h2>
               <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-                Get all the proposal features you love at a price that makes sense
-                for your business.
+                Get all the proposal features you love with flat-rate pricing that scales
+                with your business, not against it.
               </p>
               <Button size="lg" variant="secondary" asChild>
                 <Link href="/login">Get Started Free</Link>
