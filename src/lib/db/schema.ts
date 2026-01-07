@@ -91,6 +91,8 @@ export const profiles = pgTable(
     stripeAccountId: text('stripe_account_id'),
     stripeAccountEnabled: boolean('stripe_account_enabled').default(false),
     stripeCustomerId: text('stripe_customer_id'),
+    // x402 wallet address for receiving USDC payments
+    walletAddress: text('wallet_address'),
     // Current organization context (for team users)
     currentOrganizationId: uuid('current_organization_id'),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
@@ -179,6 +181,8 @@ export const recipients = pgTable(
       .$type<'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded'>(),
     paymentAmount: integer('payment_amount'), // Amount in cents
     paymentIntentId: text('payment_intent_id'),
+    paymentMethod: text('payment_method')
+      .$type<'stripe' | 'x402'>(), // Payment method used
     paymentTiming: text('payment_timing')
       .$type<'due_now' | 'net_30' | 'net_60'>(),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
@@ -232,12 +236,18 @@ export const payments = pgTable(
       .$type<'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded'>()
       .default('pending')
       .notNull(),
+    paymentMethod: text('payment_method')
+      .$type<'stripe' | 'x402'>()
+      .default('stripe')
+      .notNull(),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(), // For x402 tx details
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   },
   (payment) => [
     index('payments_document_id_idx').on(payment.documentId),
     index('payments_stripe_payment_intent_id_idx').on(payment.stripePaymentIntentId),
     index('payments_status_idx').on(payment.status),
+    index('payments_method_idx').on(payment.paymentMethod),
   ]
 );
 
@@ -426,6 +436,8 @@ export const organizations = pgTable(
     // Stripe Connect (team-level, not user-level)
     stripeAccountId: text('stripe_account_id'),
     stripeAccountEnabled: boolean('stripe_account_enabled').default(false),
+    // x402 wallet address for receiving USDC payments
+    walletAddress: text('wallet_address'),
     // Storage tracking
     storageUsedBytes: bigint('storage_used_bytes', { mode: 'number' }).default(0),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
@@ -523,6 +535,35 @@ export const storageItems = pgTable(
   ]
 );
 
+// Comments
+export const comments = pgTable(
+  'comments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    documentId: uuid('document_id')
+      .notNull()
+      .references(() => documents.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    blockId: text('block_id'), // Which block this comment is on (null = document-level)
+    parentId: uuid('parent_id'), // Self-reference for threading (null = top-level)
+    content: text('content').notNull(),
+    resolved: boolean('resolved').default(false).notNull(),
+    resolvedAt: timestamp('resolved_at', { mode: 'date' }),
+    resolvedBy: uuid('resolved_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (comment) => [
+    index('comments_document_id_idx').on(comment.documentId),
+    index('comments_user_id_idx').on(comment.userId),
+    index('comments_block_id_idx').on(comment.blockId),
+    index('comments_parent_id_idx').on(comment.parentId),
+    index('comments_created_at_idx').on(comment.createdAt),
+  ]
+);
+
 // ==========================================
 // Relations
 // ==========================================
@@ -550,6 +591,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   invitedMembers: many(organizationMembers, { relationName: 'invitedBy' }),
   sentInvites: many(organizationInvites),
   storageUploads: many(storageItems),
+  comments: many(comments),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -595,6 +637,28 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
     references: [recipients.id],
   }),
   storageItems: many(storageItems),
+  comments: many(comments),
+}));
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  document: one(documents, {
+    fields: [comments.documentId],
+    references: [documents.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id],
+    relationName: 'replies',
+  }),
+  replies: many(comments, { relationName: 'replies' }),
+  resolvedByUser: one(users, {
+    fields: [comments.resolvedBy],
+    references: [users.id],
+  }),
 }));
 
 export const recipientsRelations = relations(recipients, ({ one, many }) => ({

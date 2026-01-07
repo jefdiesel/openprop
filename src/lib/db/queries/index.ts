@@ -2,3 +2,4 @@
 export * from './documents';
 export * from './recipients';
 export * from './profiles';
+export * from './comments';
