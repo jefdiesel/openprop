@@ -19,6 +19,7 @@ import {
   ActivityFeed,
   type Activity,
 } from "@/components/dashboard/activity-feed";
+import { ConversionFunnel } from "@/components/dashboard/conversion-funnel";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { documents, recipients, documentEvents, payments } from "@/lib/db/schema";
@@ -218,6 +219,9 @@ export default async function DashboardPage() {
           description="Total collected"
         />
       </div>
+
+      {/* Conversion Funnel */}
+      <ConversionFunnel />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
