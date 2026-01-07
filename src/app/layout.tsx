@@ -67,9 +67,12 @@ export const metadata: Metadata = {
     creator: "@openproposal",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" }
+    ],
+    apple: [
+      { url: "/icon.svg", type: "image/svg+xml" }
+    ],
   },
   manifest: "/manifest.json",
   alternates: {

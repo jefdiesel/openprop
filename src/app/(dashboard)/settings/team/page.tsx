@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function TeamSettingsPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/sign-in");
+    redirect("/login");
   }
 
   // Get current organization context
