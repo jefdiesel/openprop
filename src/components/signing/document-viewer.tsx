@@ -228,7 +228,7 @@ export function DocumentViewer({
           </h1>
 
           {/* Document blocks */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {content.map((dbBlock) => {
               const block = mapDbBlockToComponentBlock(dbBlock);
               if (!block) {

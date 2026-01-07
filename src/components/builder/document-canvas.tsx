@@ -159,7 +159,7 @@ function ImageBlockRenderer({
     return (
       <div
         className={cn(
-          "flex h-32 flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed transition-colors",
+          "flex h-28 sm:h-32 flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed transition-colors",
           isDragOver ? "border-primary bg-primary/10" : "border-muted-foreground/25 bg-muted/50",
           onUpdate && "cursor-pointer hover:border-primary/50",
           data.alignment === "center" && "mx-auto",
@@ -171,8 +171,8 @@ function ImageBlockRenderer({
         onDragLeave={onUpdate ? handleDragLeave : undefined}
         onClick={handleClick}
       >
-        <ImageIcon className="h-8 w-8 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
+        <ImageIcon className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
+        <span className="text-xs sm:text-sm text-muted-foreground text-center px-2">
           {onUpdate ? "Drop image or click to upload" : "No image selected"}
         </span>
         {onUpdate && (
@@ -212,7 +212,7 @@ function ImageBlockRenderer({
           className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md cursor-pointer"
           onClick={handleClick}
         >
-          <div className="text-white text-sm flex items-center gap-2">
+          <div className="text-white text-xs sm:text-sm flex items-center gap-2">
             <Upload className="h-4 w-4" />
             Replace image
           </div>
@@ -243,30 +243,30 @@ function PricingTableBlockRenderer({ data }: { data: PricingTableBlockData }) {
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       {data.title && (
-        <div className="border-b bg-muted/50 px-4 py-2 font-medium">
+        <div className="border-b bg-muted/50 px-3 sm:px-4 py-2 font-medium">
           {data.title}
         </div>
       )}
       <table className="w-full">
         <thead>
           <tr className="border-b bg-muted/30">
-            <th className="px-4 py-2 text-left text-sm font-medium">Description</th>
-            <th className="px-4 py-2 text-right text-sm font-medium">Qty</th>
-            <th className="px-4 py-2 text-right text-sm font-medium">Unit Price</th>
-            <th className="px-4 py-2 text-right text-sm font-medium">Total</th>
+            <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium">Description</th>
+            <th className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">Qty</th>
+            <th className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">Unit Price</th>
+            <th className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">Total</th>
           </tr>
         </thead>
         <tbody>
           {data.items.map((item) => (
             <tr key={item.id} className="border-b last:border-0">
-              <td className="px-4 py-2 text-sm">{item.description}</td>
-              <td className="px-4 py-2 text-right text-sm">{item.quantity}</td>
-              <td className="px-4 py-2 text-right text-sm">
+              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">{item.description}</td>
+              <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">{item.quantity}</td>
+              <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">
                 {formatCurrency(item.unitPrice)}
               </td>
-              <td className="px-4 py-2 text-right text-sm">
+              <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">
                 {formatCurrency(item.quantity * item.unitPrice)}
               </td>
             </tr>
@@ -275,10 +275,10 @@ function PricingTableBlockRenderer({ data }: { data: PricingTableBlockData }) {
         {data.showTotal && (
           <tfoot>
             <tr className="bg-muted/50">
-              <td colSpan={3} className="px-4 py-2 text-right font-medium">
+              <td colSpan={3} className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">
                 Total
               </td>
-              <td className="px-4 py-2 text-right font-medium">
+              <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">
                 {formatCurrency(total)}
               </td>
             </tr>
@@ -291,8 +291,8 @@ function PricingTableBlockRenderer({ data }: { data: PricingTableBlockData }) {
 
 function SignatureBlockRenderer({ data }: { data: SignatureBlockData }) {
   return (
-    <div className="rounded-md border p-4">
-      <div className="mb-2 text-sm font-medium">
+    <div className="rounded-md border p-3 sm:p-4">
+      <div className="mb-2 text-xs sm:text-sm font-medium">
         {data.role}
         {data.required && <span className="ml-1 text-destructive">*</span>}
       </div>
@@ -302,7 +302,7 @@ function SignatureBlockRenderer({ data }: { data: SignatureBlockData }) {
           <img
             src={data.signatureData}
             alt="Signature"
-            className="h-16 border-b border-dashed"
+            className="h-14 sm:h-16 border-b border-dashed"
           />
           {data.signedAt && (
             <span className="text-xs text-muted-foreground">
@@ -311,8 +311,8 @@ function SignatureBlockRenderer({ data }: { data: SignatureBlockData }) {
           )}
         </div>
       ) : (
-        <div className="flex h-16 items-center justify-center border-b border-dashed">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex h-14 sm:h-16 items-center justify-center border-b border-dashed">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             Click to sign
           </span>
         </div>
@@ -358,7 +358,7 @@ function VideoEmbedBlockRenderer({ data }: { data: VideoEmbedBlockData }) {
           getAspectRatioClass()
         )}
       >
-        <span className="text-sm text-muted-foreground">No video URL</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">No video URL</span>
       </div>
     )
   }
@@ -396,7 +396,7 @@ function TableBlockRenderer({ data }: { data: TableBlockData }) {
         <thead>
           <tr style={{ backgroundColor: data.headerBackground }}>
             {data.headers.map((header, i) => (
-              <th key={i} className="border-b px-4 py-2 text-left text-sm font-medium">
+              <th key={i} className="border-b px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium">
                 {header}
               </th>
             ))}
@@ -406,7 +406,7 @@ function TableBlockRenderer({ data }: { data: TableBlockData }) {
           {data.cells.map((row, i) => (
             <tr key={i} className="border-b last:border-0">
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 text-sm">
+                <td key={j} className="px-2 sm:px-4 py-2 text-xs sm:text-sm">
                   {cell}
                 </td>
               ))}
@@ -464,26 +464,26 @@ function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
     : null
 
   return (
-    <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
+    <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-3 sm:p-4">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+        <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary/10">
           <CreditCard className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-primary">Payment Required</h4>
-          <p className="text-sm text-muted-foreground">{data.description}</p>
+          <h4 className="text-sm sm:text-base font-semibold text-primary">Payment Required</h4>
+          <p className="text-xs sm:text-sm text-muted-foreground">{data.description}</p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-4">
+          <div className="mt-3 flex flex-wrap items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-1.5">
-              <span className="text-xl font-bold text-primary">
+              <span className="text-lg sm:text-xl font-bold text-primary">
                 {symbol}{displayAmount.toFixed(2)}
               </span>
               {downPaymentLabel && (
-                <span className="text-sm text-muted-foreground">({downPaymentLabel})</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">({downPaymentLabel})</span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>
                 {data.timing === "due_now" ? "Due Now" : data.timing === "net_30" ? "Net 30" : "Net 60"}
@@ -492,7 +492,7 @@ function PaymentBlockRenderer({ data }: { data: PaymentBlockData }) {
           </div>
 
           {data.paymentStatus === "paid" && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
+            <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-green-600">
               <span className="h-2 w-2 rounded-full bg-green-500" />
               Paid {data.paidAt ? `on ${new Date(data.paidAt).toLocaleDateString()}` : ""}
             </div>
@@ -518,15 +518,15 @@ function DataURIBlockRenderer({
   }
 
   return (
-    <div className="rounded-lg border-2 border-dashed border-purple-300 bg-purple-50 dark:bg-purple-950/30 p-4">
+    <div className="rounded-lg border-2 border-dashed border-purple-300 bg-purple-50 dark:bg-purple-950/30 p-3 sm:p-4">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/50">
+        <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/50">
           <FileCode2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-purple-700 dark:text-purple-300">Calldata Block</h4>
+          <h4 className="text-sm sm:text-base font-semibold text-purple-700 dark:text-purple-300">Calldata Block</h4>
           {data.label && (
-            <p className="text-sm text-purple-600/70 dark:text-purple-400/70">{data.label}</p>
+            <p className="text-xs sm:text-sm text-purple-600/70 dark:text-purple-400/70">{data.label}</p>
           )}
           <div className="mt-2 flex items-center gap-3 text-xs text-purple-600/80 dark:text-purple-400/80">
             <span>Network: {networkLabels[data.network] || data.network}</span>
@@ -623,23 +623,23 @@ function SortableBlockItem({
       {/* Drag Handle & Actions */}
       <div
         className={cn(
-          "absolute -left-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
+          "absolute -left-8 sm:-left-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
           isSelected && "opacity-100"
         )}
       >
         <button
-          className="flex h-8 w-8 cursor-grab items-center justify-center rounded-md border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground active:cursor-grabbing"
+          className="flex h-11 w-11 sm:h-8 sm:w-8 cursor-grab items-center justify-center rounded-md border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground active:cursor-grabbing touch-none"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4" />
+          <GripVertical className="h-5 w-5 sm:h-4 sm:w-4" />
         </button>
       </div>
 
       {/* Comment & Delete Buttons */}
       <div
         className={cn(
-          "absolute -right-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
+          "absolute -right-8 sm:-right-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
           isSelected && "opacity-100"
         )}
       >
@@ -647,15 +647,15 @@ function SortableBlockItem({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="relative text-muted-foreground hover:text-primary"
+            className="relative text-muted-foreground hover:text-primary min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
             onClick={(e) => {
               e.stopPropagation()
               onCommentClick()
             }}
           >
-            <MessageCircle className="h-4 w-4" />
+            <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4" />
             {commentCount && commentCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[10px] text-primary-foreground">
                 {commentCount}
               </span>
             )}
@@ -664,18 +664,18 @@ function SortableBlockItem({
         <Button
           variant="ghost"
           size="icon-sm"
-          className="text-muted-foreground hover:text-destructive"
+          className="text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
           }}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
         </Button>
       </div>
 
       {/* Block Content */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <BlockRenderer block={block} onUpdate={onUpdate} isSelected={isSelected} />
       </div>
     </div>
@@ -701,13 +701,13 @@ function EmptyCanvasDropZone() {
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+        "flex min-h-[300px] sm:min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
         isOver
           ? "border-primary bg-primary/5"
           : "border-muted-foreground/25"
       )}
     >
-      <p className="text-center text-muted-foreground">
+      <p className="text-center text-sm sm:text-base text-muted-foreground px-4">
         Drag blocks here to start building your document
       </p>
     </div>
@@ -756,7 +756,7 @@ function DocumentTitle() {
         onChange={(e) => setLocalTitle(e.target.value)}
         onBlur={handleSubmit}
         onKeyDown={handleKeyDown}
-        className="w-full text-3xl font-bold bg-transparent border-b-2 border-primary/50 outline-none pb-2 mb-6"
+        className="w-full text-xl sm:text-2xl md:text-3xl font-bold bg-transparent border-b-2 border-primary/50 outline-none pb-2 mb-4 sm:mb-6"
         placeholder="Document Title"
       />
     )
@@ -765,7 +765,7 @@ function DocumentTitle() {
   return (
     <h1
       onClick={() => setIsEditing(true)}
-      className="text-3xl font-bold mb-6 pb-2 border-b border-transparent hover:border-muted-foreground/20 cursor-text transition-colors"
+      className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 pb-2 border-b border-transparent hover:border-muted-foreground/20 cursor-text transition-colors"
     >
       {state.documentTitle || "Untitled Document"}
     </h1>
@@ -788,12 +788,12 @@ export function DocumentCanvas({
 
   return (
     <div
-      className="flex-1 overflow-auto bg-muted/30 p-8"
+      className="flex-1 overflow-auto bg-muted/30 p-3 sm:p-6 md:p-8"
       onClick={handleCanvasClick}
     >
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-full sm:max-w-3xl px-2 sm:px-0">
         {/* Document Paper */}
-        <div className="min-h-[800px] rounded-lg border bg-background p-8 shadow-sm">
+        <div className="min-h-[500px] sm:min-h-[800px] rounded-lg border bg-background p-4 sm:p-6 md:p-8 shadow-sm">
           {/* Document Title */}
           <DocumentTitle />
 

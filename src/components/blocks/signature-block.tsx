@@ -122,7 +122,7 @@ export function SignatureBlock({
         </div>
 
         <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="signer-role">Signer Role</Label>
               <Input
@@ -266,12 +266,13 @@ export function SignatureBlock({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Button
               type="button"
               variant={block.signatureType === "draw" ? "default" : "outline"}
               size="sm"
               onClick={() => handleSignatureTypeChange("draw")}
+              className="w-full sm:w-auto"
             >
               <PenLine className="h-4 w-4 mr-2" />
               Draw
@@ -281,6 +282,7 @@ export function SignatureBlock({
               variant={block.signatureType === "type" ? "default" : "outline"}
               size="sm"
               onClick={() => handleSignatureTypeChange("type")}
+              className="w-full sm:w-auto"
             >
               <Type className="h-4 w-4 mr-2" />
               Type
@@ -293,7 +295,7 @@ export function SignatureBlock({
                 <SignatureCanvas
                   ref={signatureRef}
                   canvasProps={{
-                    className: "w-full h-40 cursor-crosshair",
+                    className: "w-full h-32 sm:h-40 md:h-48 cursor-crosshair",
                   }}
                   backgroundColor="white"
                 />
@@ -333,7 +335,7 @@ export function SignatureBlock({
                   <Label className="text-sm text-muted-foreground">
                     Select a style:
                   </Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {signatureFonts.map((font, index) => (
                       <button
                         key={font.name}

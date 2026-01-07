@@ -183,16 +183,17 @@ export function PricingTableBlock({
 
     return (
       <div className="space-y-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead>Item</TableHead>
-              <TableHead className="w-24 text-right">Qty</TableHead>
-              <TableHead className="w-32 text-right">Unit Price</TableHead>
-              <TableHead className="w-32 text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <Table className="min-w-[600px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead className="w-24 text-right">Qty</TableHead>
+                <TableHead className="w-32 text-right">Unit Price</TableHead>
+                <TableHead className="w-32 text-right">Total</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {validItems.map((item) => (
               <TableRow
@@ -315,6 +316,7 @@ export function PricingTableBlock({
             )}
           </TableFooter>
         </Table>
+        </div>
       </div>
     );
   }
@@ -330,15 +332,16 @@ export function PricingTableBlock({
 
     return (
       <div className="space-y-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead className="w-24 text-right">Qty</TableHead>
-              <TableHead className="w-32 text-right">Unit Price</TableHead>
-              <TableHead className="w-32 text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <Table className="min-w-[600px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead className="w-24 text-right">Qty</TableHead>
+                <TableHead className="w-32 text-right">Unit Price</TableHead>
+                <TableHead className="w-32 text-right">Total</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {visibleItems.map((item) => (
                 <TableRow key={item.id}>
@@ -421,6 +424,7 @@ export function PricingTableBlock({
             )}
           </TableFooter>
         </Table>
+        </div>
       </div>
     );
   }
@@ -577,12 +581,12 @@ export function PricingTableBlock({
         Add Item
       </Button>
 
-      <div className="grid grid-cols-2 gap-6 pt-4 border-t">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t">
         <div className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="currency">Currency</Label>
             <Select value={block.currency} onValueChange={handleCurrencyChange}>
-              <SelectTrigger id="currency" className="w-32">
+              <SelectTrigger id="currency" className="w-full sm:w-32">
                 <SelectValue placeholder="Currency" />
               </SelectTrigger>
               <SelectContent>
@@ -606,7 +610,7 @@ export function PricingTableBlock({
                   handleDiscountTypeChange(v as "percentage" | "fixed")
                 }
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -622,7 +626,7 @@ export function PricingTableBlock({
                 onChange={(e) =>
                   handleDiscountValueChange(parseFloat(e.target.value) || 0)
                 }
-                className="w-24"
+                className="w-full sm:w-24"
               />
               <span className="text-muted-foreground">
                 {block.discountType === "percentage" ? "%" : block.currency}
@@ -638,7 +642,7 @@ export function PricingTableBlock({
                 placeholder="Tax label"
                 value={block.taxLabel || ""}
                 onChange={(e) => handleTaxLabelChange(e.target.value)}
-                className="w-32"
+                className="w-full sm:w-32"
               />
               <Input
                 type="number"
@@ -649,7 +653,7 @@ export function PricingTableBlock({
                 onChange={(e) =>
                   handleTaxRateChange(parseFloat(e.target.value) || 0)
                 }
-                className="w-20"
+                className="w-full sm:w-20"
               />
               <span className="text-muted-foreground">%</span>
             </div>
