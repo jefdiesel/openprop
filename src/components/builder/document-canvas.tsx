@@ -10,7 +10,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Trash2, GripVertical, Upload, ImageIcon, CreditCard, Clock, DollarSign } from "lucide-react"
+import { Trash2, GripVertical, Upload, ImageIcon, CreditCard, Clock, DollarSign, MessageCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -581,12 +581,16 @@ function SortableBlockItem({
   onSelect,
   onDelete,
   onUpdate,
+  onCommentClick,
+  commentCount,
 }: {
   block: Block
   isSelected: boolean
   onSelect: () => void
   onDelete: () => void
   onUpdate: (data: Record<string, unknown>) => void
+  onCommentClick?: () => void
+  commentCount?: number
 }) {
   const {
     attributes,
@@ -632,13 +636,31 @@ function SortableBlockItem({
         </button>
       </div>
 
-      {/* Delete Button */}
+      {/* Comment & Delete Buttons */}
       <div
         className={cn(
-          "absolute -right-10 top-0 opacity-0 transition-opacity group-hover:opacity-100",
+          "absolute -right-10 top-0 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100",
           isSelected && "opacity-100"
         )}
       >
+        {onCommentClick && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="relative text-muted-foreground hover:text-primary"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCommentClick()
+            }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            {commentCount && commentCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                {commentCount}
+              </span>
+            )}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -751,7 +773,13 @@ function DocumentTitle() {
 }
 
 // Main Canvas Component
-export function DocumentCanvas() {
+export function DocumentCanvas({
+  onBlockCommentClick,
+  blockCommentCounts,
+}: {
+  onBlockCommentClick?: (blockId: string) => void
+  blockCommentCounts?: Record<string, number>
+} = {}) {
   const { state, selectBlock, removeBlock, updateBlock } = useBuilder()
 
   const handleCanvasClick = useCallback(() => {
@@ -785,6 +813,8 @@ export function DocumentCanvas() {
                     onSelect={() => selectBlock(block.id)}
                     onDelete={() => removeBlock(block.id)}
                     onUpdate={(data) => updateBlock(block.id, data)}
+                    onCommentClick={onBlockCommentClick ? () => onBlockCommentClick(block.id) : undefined}
+                    commentCount={blockCommentCounts?.[block.id] || 0}
                   />
                 ))}
               </div>

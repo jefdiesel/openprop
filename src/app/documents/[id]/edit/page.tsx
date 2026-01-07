@@ -10,6 +10,7 @@ import { DocumentCanvas, DragOverlayBlock } from "@/components/builder/document-
 import { BlockSettings } from "@/components/builder/block-settings"
 import { BuilderToolbar } from "@/components/builder/builder-toolbar"
 import { SendDialog } from "@/components/send/send-dialog"
+import { CommentThread } from "@/components/comments"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -98,14 +99,16 @@ async function saveDocument(
 function DocumentEditorContent({ documentId }: { documentId: string }) {
   const router = useRouter()
   const { data: session } = useSession()
-  const { state, setDocument, setSaving, setSaved, addBlock, moveBlock } = useBuilder()
+  const { state, setDocument, setSaving, setSaved, addBlock, moveBlock, selectBlock } = useBuilder()
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
   const [rightPanelOpen, setRightPanelOpen] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [sendDialogOpen, setSendDialogOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activePaletteType, setActivePaletteType] = useState<BlockType | null>(null)
   const [stripeConnected, setStripeConnected] = useState(false)
+  const [blockCommentCounts, setBlockCommentCounts] = useState<Record<string, number>>({})
 
   // Fetch Stripe connection status
   useEffect(() => {
@@ -122,6 +125,22 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
     }
     checkStripeStatus()
   }, [])
+
+  // Fetch comment counts for blocks
+  useEffect(() => {
+    async function fetchCommentCounts() {
+      try {
+        const response = await fetch(`/api/documents/${documentId}/comments/counts`)
+        if (response.ok) {
+          const data = await response.json()
+          setBlockCommentCounts(data.counts || {})
+        }
+      } catch (error) {
+        console.error("Failed to fetch comment counts:", error)
+      }
+    }
+    fetchCommentCounts()
+  }, [documentId])
 
   // Calculate if document has a pricing table or payment block and its total
   const { hasPricingTable, pricingTableTotal } = useMemo(() => {
@@ -210,6 +229,12 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
     router.push("/documents")
   }, [router])
 
+  // Handle block comment click
+  const handleBlockCommentClick = useCallback((blockId: string) => {
+    selectBlock(blockId)
+    setCommentsOpen(true)
+  }, [selectBlock])
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -292,6 +317,7 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
           onSave={handleSave}
           onPreview={handlePreview}
           onSend={handleSend}
+          onCommentsClick={() => setCommentsOpen(true)}
         />
 
         {/* Main Content */}
@@ -336,7 +362,10 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
           </Sheet>
 
           {/* Canvas */}
-          <DocumentCanvas />
+          <DocumentCanvas
+            onBlockCommentClick={handleBlockCommentClick}
+            blockCommentCounts={blockCommentCounts}
+          />
 
           {/* Desktop Right Panel (Block Settings) */}
           <div className="hidden w-56 lg:block">
@@ -355,6 +384,24 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
           </Sheet>
         </div>
       </div>
+
+      {/* Comments Panel */}
+      <Sheet open={commentsOpen} onOpenChange={setCommentsOpen}>
+        <SheetContent side="right" className="w-96 p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Comments</SheetTitle>
+            <SheetDescription>View and add comments</SheetDescription>
+          </SheetHeader>
+          {session?.user?.id && (
+            <CommentThread
+              documentId={documentId}
+              blockId={state.selectedBlockId}
+              currentUserId={session.user.id}
+              onClose={() => setCommentsOpen(false)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
 
       <DragOverlay dropAnimation={null} zIndex={9999}>
         {activePaletteType ? (

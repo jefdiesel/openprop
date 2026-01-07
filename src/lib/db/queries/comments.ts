@@ -168,3 +168,26 @@ export async function userOwnsComment(commentId: string, userId: string) {
     .limit(1);
   return !!comment;
 }
+
+// Get comment counts per block for a document
+export async function getBlockCommentCounts(documentId: string): Promise<Record<string, number>> {
+  const allComments = await db
+    .select()
+    .from(comments)
+    .where(
+      and(
+        eq(comments.documentId, documentId),
+        isNull(comments.parentId),
+        eq(comments.resolved, false)
+      )
+    );
+
+  const counts: Record<string, number> = {};
+  for (const comment of allComments) {
+    if (comment.blockId) {
+      counts[comment.blockId] = (counts[comment.blockId] || 0) + 1;
+    }
+  }
+
+  return counts;
+}

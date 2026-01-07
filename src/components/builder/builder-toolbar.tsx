@@ -15,6 +15,7 @@ import {
   Download,
   Copy,
   Trash2,
+  MessageCircle,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -33,9 +34,10 @@ interface BuilderToolbarProps {
   onSave?: () => Promise<void>
   onPreview?: () => void
   onSend?: () => void
+  onCommentsClick?: () => void
 }
 
-export function BuilderToolbar({ onSave, onPreview, onSend }: BuilderToolbarProps) {
+export function BuilderToolbar({ onSave, onPreview, onSend, onCommentsClick }: BuilderToolbarProps) {
   const router = useRouter()
   const {
     state,
@@ -234,6 +236,11 @@ export function BuilderToolbar({ onSave, onPreview, onSend }: BuilderToolbarProp
         <Button variant="outline" size="sm" onClick={onPreview}>
           <Eye className="mr-2 h-4 w-4" />
           Preview
+        </Button>
+
+        <Button variant="outline" size="sm" onClick={onCommentsClick}>
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Comments
         </Button>
 
         <Button size="sm" onClick={onSend}>
