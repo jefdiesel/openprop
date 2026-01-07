@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { BlockRenderer } from "@/components/blocks/block-renderer";
-import { buildEvaluationContext, isBlockVisible } from "@/lib/conditions/evaluator";
 import type { Block } from "@/types/blocks";
 import type { Block as DbBlock } from "@/types/database";
 
@@ -117,9 +116,6 @@ export function DocumentViewer({
     // Check if block uses nested data format (from builder)
     const data = (dbBlock as any).data || dbBlock;
 
-    // Extract visibility from either nested data or top-level
-    const visibility = (dbBlock as any).visibility || data.visibility;
-
     switch (dbBlock.type) {
       case "text":
         return {
@@ -128,7 +124,6 @@ export function DocumentViewer({
           content: data.content || "",
           alignment: data.alignment || data.format?.align || "left",
           fontSize: data.fontSize ? (data.fontSize <= 14 ? "sm" : data.fontSize <= 18 ? "base" : data.fontSize <= 24 ? "lg" : "xl") : "base",
-          visibility,
         };
       case "heading":
         return {
@@ -137,7 +132,6 @@ export function DocumentViewer({
           content: `<h${data.level || 1}>${data.content || ""}</h${data.level || 1}>`,
           alignment: "left",
           fontSize: data.level === 1 ? "3xl" : data.level === 2 ? "2xl" : "xl",
-          visibility,
         };
       case "image":
         return {
@@ -147,7 +141,6 @@ export function DocumentViewer({
           alt: data.alt || "",
           caption: "",
           width: data.width,
-          visibility,
         };
       case "signature":
         // Signature data can be at top level (after signing) or nested in data
@@ -165,14 +158,12 @@ export function DocumentViewer({
           signatureType: "draw",
           signatureValue,
           signedAt: signedAtValue,
-          visibility,
         };
       case "divider":
         return {
           id: dbBlock.id,
           type: "divider",
           style: data.style || "solid",
-          visibility,
         };
       case "spacer":
         const height = data.height || 24;
@@ -180,7 +171,6 @@ export function DocumentViewer({
           id: dbBlock.id,
           type: "spacer",
           size: height >= 48 ? "large" : height >= 24 ? "medium" : "small",
-          visibility,
         };
       case "pricing-table":
         const items = data.items || [];
@@ -201,21 +191,11 @@ export function DocumentViewer({
           showDescription: data.showDescription !== false,
           taxRate: data.taxRate || 0,
           taxLabel: data.taxLabel || "Tax",
-          visibility,
         };
       default:
         return null;
     }
   }, []);
-
-  // Build evaluation context from all blocks for condition evaluation
-  const evaluationContext = useMemo(() => {
-    // Map all DB blocks to component blocks
-    const blocks: Block[] = content
-      .map(mapDbBlockToComponentBlock)
-      .filter((b): b is Block => b !== null);
-    return buildEvaluationContext(blocks);
-  }, [content, mapDbBlockToComponentBlock]);
 
   const handleBlockChange = useCallback(
     (block: Block) => {
@@ -251,12 +231,6 @@ export function DocumentViewer({
           <div className="space-y-6">
             {content.map((dbBlock) => {
               const block = mapDbBlockToComponentBlock(dbBlock);
-
-              // Check visibility for all blocks in sign/view mode
-              if (block && !isBlockVisible(block, evaluationContext)) {
-                return null; // Hide block if condition evaluates to false
-              }
-
               if (!block) {
                 // Render unsupported blocks as a simple display
                 if (dbBlock.type === "table") {
