@@ -3,13 +3,15 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Download, Check, Clock, Eye, X, History, Lock } from "lucide-react";
+import { ArrowLeft, Pencil, Download, Check, Clock, Eye, X, History, Lock, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DocumentViewer } from "@/components/signing/document-viewer";
 import { ActivityTimeline } from "@/components/documents/activity-timeline";
+import { DocumentAnalytics } from "@/components/documents/document-analytics";
 import { VerificationSection } from "@/components/blockchain";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Block as DbBlock } from "@/types/database";
 
 interface Recipient {
@@ -239,8 +241,27 @@ export default function DocumentViewPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Activity Timeline - takes 1/3 of width on large screens */}
-        <ActivityTimeline documentId={document.id} className="lg:col-span-1" />
+        {/* Activity & Analytics - takes 1/3 of width on large screens */}
+        <div className="lg:col-span-1">
+          <Tabs defaultValue="activity" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="activity">
+                <Clock className="mr-2 h-4 w-4" />
+                Activity
+              </TabsTrigger>
+              <TabsTrigger value="analytics">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="activity" className="mt-4">
+              <ActivityTimeline documentId={document.id} />
+            </TabsContent>
+            <TabsContent value="analytics" className="mt-4">
+              <DocumentAnalytics documentId={document.id} />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

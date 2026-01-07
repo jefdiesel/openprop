@@ -27,6 +27,7 @@ export async function GET() {
       brandColor: profile?.brandColor || "#000000",
       stripeAccountId: profile?.stripeAccountId || null,
       stripeAccountEnabled: profile?.stripeAccountEnabled || false,
+      walletAddress: profile?.walletAddress || null,
     },
   });
 }
@@ -50,7 +51,17 @@ export async function PUT(request: Request) {
   }
 
   // Update profile if any profile fields provided
-  if (body.companyName !== undefined || body.brandColor !== undefined) {
+  if (body.companyName !== undefined || body.brandColor !== undefined || body.walletAddress !== undefined) {
+    // Validate wallet address format if provided
+    if (body.walletAddress !== undefined && body.walletAddress !== null && body.walletAddress !== "") {
+      if (!body.walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return NextResponse.json(
+          { error: "Invalid wallet address format. Must be a valid Ethereum address." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if profile exists
     const [existingProfile] = await db.select().from(profiles).where(eq(profiles.id, userId));
 
@@ -60,6 +71,7 @@ export async function PUT(request: Request) {
         .set({
           ...(body.companyName !== undefined && { companyName: body.companyName }),
           ...(body.brandColor !== undefined && { brandColor: body.brandColor }),
+          ...(body.walletAddress !== undefined && { walletAddress: body.walletAddress || null }),
           updatedAt: new Date(),
         })
         .where(eq(profiles.id, userId));
@@ -69,6 +81,7 @@ export async function PUT(request: Request) {
         id: userId,
         companyName: body.companyName || null,
         brandColor: body.brandColor || "#000000",
+        walletAddress: body.walletAddress || null,
       });
     }
   }

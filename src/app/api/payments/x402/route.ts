@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { documents, recipients, payments, profiles, subscriptions } from "@/lib/db/schema";
+import { documents, recipients, payments, profiles, subscriptions, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import {
@@ -12,6 +12,41 @@ import {
   verifyPaymentWithFacilitator,
   settlePaymentWithFacilitator,
 } from "@/lib/x402";
+
+// Helper to get the wallet address for a document owner
+async function getDocumentOwnerWallet(documentId: string): Promise<string | null> {
+  // Get the document with its owner info
+  const [doc] = await db
+    .select({
+      userId: documents.userId,
+      organizationId: documents.organizationId,
+    })
+    .from(documents)
+    .where(eq(documents.id, documentId))
+    .limit(1);
+
+  if (!doc) return null;
+
+  // If document belongs to an organization, get org wallet
+  if (doc.organizationId) {
+    const [org] = await db
+      .select({ walletAddress: organizations.walletAddress })
+      .from(organizations)
+      .where(eq(organizations.id, doc.organizationId))
+      .limit(1);
+
+    if (org?.walletAddress) return org.walletAddress;
+  }
+
+  // Otherwise get user's wallet from profile
+  const [profile] = await db
+    .select({ walletAddress: profiles.walletAddress })
+    .from(profiles)
+    .where(eq(profiles.id, doc.userId))
+    .limit(1);
+
+  return profile?.walletAddress || null;
+}
 
 export interface X402PaymentRequest {
   type: "document" | "subscription";
@@ -51,6 +86,8 @@ export async function GET(request: NextRequest) {
   let description: string;
   let resource: string;
 
+  let payTo: string | undefined;
+
   if (type === "document") {
     if (!documentId) {
       return NextResponse.json(
@@ -87,6 +124,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get the document owner's wallet address
+    const ownerWallet = await getDocumentOwnerWallet(documentId);
+    if (!ownerWallet) {
+      return NextResponse.json(
+        { error: "Document owner has not configured a wallet address for receiving USDC payments" },
+        { status: 400 }
+      );
+    }
+    payTo = ownerWallet;
+
     description = `Payment for document: ${document.title}`;
     resource = `/api/payments/x402/document/${documentId}`;
   } else if (type === "subscription") {
@@ -122,7 +169,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const requirement = generatePaymentRequirement(amount, resource, description);
+  const requirement = generatePaymentRequirement(amount, resource, description, payTo);
 
   // Return 402 Payment Required with payment details
   return NextResponse.json(
@@ -130,7 +177,7 @@ export async function GET(request: NextRequest) {
       paymentRequired: true,
       requirement,
       network: X402_CONFIG.network,
-      payTo: X402_CONFIG.payToAddress,
+      payTo: requirement.payTo,
     },
     {
       status: 402,
@@ -171,19 +218,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine resource based on payment type
+    // Determine resource and payTo based on payment type
     let resource: string;
-    if (type === "document") {
+    let payTo: string | undefined;
+
+    if (type === "document" && documentId) {
       resource = `/api/payments/x402/document/${documentId}`;
+      // Get document owner's wallet for verification
+      payTo = await getDocumentOwnerWallet(documentId) || undefined;
+      if (!payTo) {
+        return NextResponse.json(
+          { error: "Document owner wallet not configured" },
+          { status: 400 }
+        );
+      }
     } else {
       resource = `/api/payments/x402/subscription/${planId}`;
+      // Subscription payments go to platform wallet
     }
 
     // Verify payment with facilitator
     const verification = await verifyPaymentWithFacilitator(
       paymentPayload,
       amount,
-      resource
+      resource,
+      payTo
     );
 
     if (!verification.valid) {
@@ -208,15 +267,28 @@ export async function POST(request: NextRequest) {
 
     if (type === "document" && documentId && recipientId) {
       // Create payment record for document
-      // Note: Using stripePaymentIntentId to store x402 transaction hash for tracking
       await db.insert(payments).values({
         documentId,
         recipientId,
         amount: Math.round(amount * 100), // Convert to cents for consistency
         currency: "usdc",
         status: "succeeded",
-        stripePaymentIntentId: `x402:${settlement.transactionHash}`, // Prefix to identify x402 payments
+        paymentMethod: "x402",
+        metadata: {
+          transactionHash: settlement.transactionHash,
+          fromAddress: fromAddress,
+          network: X402_CONFIG.network,
+        },
       });
+
+      // Update recipient payment status
+      await db
+        .update(recipients)
+        .set({
+          paymentStatus: "succeeded",
+          paymentMethod: "x402",
+        })
+        .where(eq(recipients.id, recipientId));
 
       return NextResponse.json({
         success: true,

@@ -14,7 +14,8 @@ import type {
 export function generatePaymentRequirement(
   amount: number, // in dollars
   resource: string,
-  description: string
+  description: string,
+  payTo?: string // Optional: custom wallet address (defaults to platform wallet)
 ): X402PaymentRequirement {
   return {
     scheme: "exact",
@@ -23,7 +24,7 @@ export function generatePaymentRequirement(
     resource,
     description,
     mimeType: "application/json",
-    payTo: X402_CONFIG.payToAddress,
+    payTo: payTo || X402_CONFIG.payToAddress,
     maxTimeoutSeconds: X402_CONFIG.paymentTimeoutSeconds,
     asset: "USDC",
   };
@@ -61,7 +62,8 @@ export function parsePaymentSignature(
 export async function verifyPaymentWithFacilitator(
   payload: X402PaymentPayload,
   expectedAmount: number,
-  expectedResource: string
+  expectedResource: string,
+  expectedPayTo?: string // Optional: custom wallet address
 ): Promise<X402VerificationResult> {
   try {
     const response = await fetch(`${X402_CONFIG.facilitatorUrl}/verify`, {
@@ -77,7 +79,7 @@ export async function verifyPaymentWithFacilitator(
         payload,
         expectedAmount: formatX402Price(expectedAmount),
         expectedResource,
-        expectedPayTo: X402_CONFIG.payToAddress,
+        expectedPayTo: expectedPayTo || X402_CONFIG.payToAddress,
       }),
     });
 

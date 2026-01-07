@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Save, Upload, Check, ExternalLink, Loader2, FileUp, CreditCard, Sparkles, Crown } from "lucide-react";
+import { Save, Upload, Check, ExternalLink, Loader2, FileUp, CreditCard, Sparkles, Crown, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +29,7 @@ interface SettingsData {
     brandColor: string;
     stripeAccountId: string | null;
     stripeAccountEnabled: boolean;
+    walletAddress: string | null;
   };
 }
 
@@ -65,6 +66,10 @@ export default function SettingsPage() {
     connected: false,
     accountId: null as string | null,
   });
+  const [walletData, setWalletData] = React.useState({
+    address: "",
+    isSaving: false,
+  });
   const [subscriptionData, setSubscriptionData] = React.useState<{
     subscription: SubscriptionData | null;
     plan: PlanData | null;
@@ -96,6 +101,10 @@ export default function SettingsPage() {
         setStripeData({
           connected: data.profile.stripeAccountEnabled,
           accountId: data.profile.stripeAccountId,
+        });
+        setWalletData({
+          address: data.profile.walletAddress || "",
+          isSaving: false,
         });
       } catch (error) {
         console.error("Failed to load settings:", error);
@@ -210,6 +219,29 @@ export default function SettingsPage() {
       toast.error("Failed to save branding");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveWallet = async () => {
+    setWalletData(prev => ({ ...prev, isSaving: true }));
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: walletData.address || null,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to save");
+      }
+      toast.success("Wallet address saved");
+    } catch (error) {
+      console.error("Failed to save wallet:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to save wallet");
+    } finally {
+      setWalletData(prev => ({ ...prev, isSaving: false }));
     }
   };
 
@@ -634,6 +666,77 @@ export default function SettingsPage() {
                   <Link href="/settings/stripe-connect">
                     {stripeData.connected ? "Manage Stripe" : "Connect Stripe Account"}
                   </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* USDC Wallet for x402 Payments */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle>USDC Wallet</CardTitle>
+                      {walletData.address ? (
+                        <Badge className="bg-green-600">
+                          <Check className="mr-1 h-3 w-3" />
+                          Configured
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Not Set</Badge>
+                      )}
+                    </div>
+                    <CardDescription>
+                      Receive USDC payments on Base for your documents using x402.
+                    </CardDescription>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                    <Wallet className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="walletAddress">Wallet Address (Base Network)</Label>
+                  <Input
+                    id="walletAddress"
+                    value={walletData.address}
+                    onChange={(e) =>
+                      setWalletData({ ...walletData, address: e.target.value })
+                    }
+                    placeholder="0x..."
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter your Ethereum wallet address to receive USDC payments.
+                    Works with MetaMask, Coinbase Wallet, or any EVM-compatible wallet.
+                  </p>
+                </div>
+                {walletData.address && (
+                  <div className="rounded-lg bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Payments will be sent to this address on the Base network.
+                      Make sure this is a wallet you control.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="border-t pt-6">
+                <Button
+                  onClick={handleSaveWallet}
+                  disabled={walletData.isSaving}
+                >
+                  {walletData.isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Wallet Address
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
