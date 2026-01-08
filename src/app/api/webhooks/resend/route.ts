@@ -23,37 +23,30 @@ export async function POST(request: NextRequest) {
     }
 
     if (event.type === 'email.received') {
-      const { email_id, from, to, subject } = event.data;
+      const { from, to, subject, html, text } = event.data;
 
-      // Get the full email content
-      const emailContent = await fetch(
-        `https://api.resend.com/emails/${email_id}/content`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          },
-        }
-      ).then((res) => res.json());
-
-      // Forward to your email
+      // Forward to your email - content comes directly in webhook payload
       if (FORWARD_TO) {
+        const bodyHtml = html || text?.replace(/\n/g, '<br/>') || '';
+        const bodyText = text || '';
+
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
           replyTo: from,
           to: FORWARD_TO,
-          subject: `${subject}`,
+          subject: subject || '(no subject)',
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="border-bottom: 1px solid #e5e5e5; padding-bottom: 12px; margin-bottom: 16px; font-size: 13px; color: #666;">
                 <span style="color: #999;">From:</span> ${from}<br/>
-                <span style="color: #999;">To:</span> ${to.join(', ')}
+                <span style="color: #999;">To:</span> ${Array.isArray(to) ? to.join(', ') : to}
               </div>
               <div style="color: #1a1a1a; line-height: 1.6;">
-                ${emailContent.html || emailContent.text?.replace(/\n/g, '<br/>') || ''}
+                ${bodyHtml}
               </div>
             </div>
           `,
-          text: `From: ${from}\nTo: ${to.join(', ')}\n\n${emailContent.text || ''}`,
+          text: `From: ${from}\nTo: ${Array.isArray(to) ? to.join(', ') : to}\n\n${bodyText}`,
         });
       }
 
