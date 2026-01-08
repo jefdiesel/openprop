@@ -33,9 +33,7 @@ export default function MarketingProposalTemplatePage() {
             <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Pricing
             </Link>
-            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              FAQ
-            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Compare</Link>
             <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Blog
             </Link>
@@ -53,7 +51,7 @@ export default function MarketingProposalTemplatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container pt-6">
+        <div className="container px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -64,7 +62,7 @@ export default function MarketingProposalTemplatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container py-12 max-w-4xl">
+        <article className="container px-6 py-12 max-w-4xl">
           <div className="mb-6">
             <Badge className="mb-4">Marketing Templates</Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
@@ -1039,7 +1037,7 @@ export default function MarketingProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

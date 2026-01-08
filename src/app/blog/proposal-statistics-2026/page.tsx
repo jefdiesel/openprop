@@ -41,9 +41,7 @@ export default function ProposalStatistics2026Page() {
             <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Pricing
             </Link>
-            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              FAQ
-            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Compare</Link>
             <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Blog
             </Link>
@@ -59,7 +57,7 @@ export default function ProposalStatistics2026Page() {
         </div>
       </nav>
 
-      <main className="container max-w-4xl py-12">
+      <main className="container px-6 max-w-4xl py-12">
         {/* Article Header */}
         <article>
           <div className="mb-8">
@@ -1037,7 +1035,7 @@ export default function ProposalStatistics2026Page() {
 
       {/* Footer */}
       <footer className="border-t py-8 mt-12">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

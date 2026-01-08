@@ -33,9 +33,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
             <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Pricing
             </Link>
-            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              FAQ
-            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Compare</Link>
             <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Blog
             </Link>
@@ -53,7 +51,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container pt-6">
+        <div className="container px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -64,7 +62,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container max-w-4xl py-12 md:py-16">
+        <article className="container px-6 max-w-4xl py-12 md:py-16">
           <header className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
               Proposal vs Quote vs Estimate: What&apos;s the Difference?
@@ -819,7 +817,7 @@ ________________________`}
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

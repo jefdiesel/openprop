@@ -33,9 +33,7 @@ export default function HowToGetClientToPayFasterPage() {
             <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Pricing
             </Link>
-            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              FAQ
-            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Compare</Link>
             <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Blog
             </Link>
@@ -53,7 +51,7 @@ export default function HowToGetClientToPayFasterPage() {
 
       <main>
         {/* Hero */}
-        <section className="container py-12 md:py-16">
+        <section className="container px-6 py-12 md:py-16">
           <div className="max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-4">
               Business Tips
@@ -71,7 +69,7 @@ export default function HowToGetClientToPayFasterPage() {
         </section>
 
         {/* Article Content */}
-        <article className="container pb-16">
+        <article className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert max-w-none">
             {/* Introduction */}
             <div className="mb-12">
@@ -637,7 +635,7 @@ export default function HowToGetClientToPayFasterPage() {
         </article>
 
         {/* CTA */}
-        <section className="container pb-24">
+        <section className="container px-6 pb-24">
           <Card className="bg-primary text-primary-foreground max-w-4xl mx-auto">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -657,7 +655,7 @@ export default function HowToGetClientToPayFasterPage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

@@ -152,9 +152,7 @@ export default function FreelanceProposalTemplatePage() {
             <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Pricing
             </Link>
-            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              FAQ
-            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Compare</Link>
             <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               Blog
             </Link>
@@ -172,7 +170,7 @@ export default function FreelanceProposalTemplatePage() {
 
       <main>
         {/* Hero */}
-        <section className="container py-12 md:py-16">
+        <section className="container px-6 py-12 md:py-16">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
               Freelance Proposal Template: Win More Clients [Free Template]
@@ -196,7 +194,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Template Section */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-6">Free Freelance Proposal Template</h2>
             <p className="text-muted-foreground mb-6">
@@ -414,7 +412,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Why This Template Works */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">Why This Template Works</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -433,7 +431,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Customization Tips */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               Customization Tips by Freelance Type
@@ -465,7 +463,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Pricing Strategies */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               Pricing Strategies for Freelance Proposals
@@ -536,7 +534,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Common Mistakes */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               Common Freelance Proposal Mistakes
@@ -557,7 +555,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Follow Up Section */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               How to Follow Up on Freelance Proposals
@@ -634,7 +632,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Tools Section */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               Tools for Freelance Proposals
@@ -710,7 +708,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <Card className="bg-primary text-primary-foreground">
               <CardContent className="py-12 text-center">
@@ -734,7 +732,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="container pb-16">
+        <section className="container px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-8">Compare</h2>
             <div className="space-y-6">
@@ -791,7 +789,7 @@ export default function FreelanceProposalTemplatePage() {
         </section>
 
         {/* Updated Date */}
-        <section className="container pb-24">
+        <section className="container px-6 pb-24">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-sm text-muted-foreground italic">Last updated: January 2026</p>
           </div>
@@ -800,7 +798,7 @@ export default function FreelanceProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
