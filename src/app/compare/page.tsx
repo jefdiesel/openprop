@@ -30,6 +30,27 @@ const competitors = [
     description: "Strong proposal features, but per-user pricing and payments add-ons increase costs significantly.",
     logo: "🐼",
   },
+  {
+    name: "HelloSign",
+    slug: "hellosign",
+    tagline: "Dropbox's e-signature",
+    description: "Simple e-signatures by Dropbox, but lacks proposal building and payment features.",
+    logo: "✍️",
+  },
+  {
+    name: "Proposify",
+    slug: "proposify",
+    tagline: "The proposal platform",
+    description: "Solid proposal tools, but per-user pricing and limited e-signature features add up.",
+    logo: "📋",
+  },
+  {
+    name: "Better Proposals",
+    slug: "better-proposals",
+    tagline: "The proposal builder",
+    description: "Beautiful proposals, but per-user pricing and no built-in payment collection.",
+    logo: "✨",
+  },
 ];
 
 const pricingComparison = [
