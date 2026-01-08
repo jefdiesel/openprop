@@ -89,7 +89,7 @@ export default function DocuSignComparisonPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container mx-auto px-6 flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
             SendProp
           </Link>
@@ -106,7 +106,7 @@ export default function DocuSignComparisonPage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container pt-6">
+        <div className="container mx-auto px-6 pt-6">
           <Link
             href="/compare"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -117,7 +117,7 @@ export default function DocuSignComparisonPage() {
         </div>
 
         {/* Hero */}
-        <section className="container py-12 md:py-16">
+        <section className="container mx-auto px-6 py-12 md:py-16">
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="text-4xl font-bold">SendProp</div>
             <Badge variant="secondary" className="text-lg px-3 py-1">
@@ -143,7 +143,7 @@ export default function DocuSignComparisonPage() {
         </section>
 
         {/* Why Switch */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-8">
             Why businesses switch from DocuSign
           </h2>
@@ -165,7 +165,7 @@ export default function DocuSignComparisonPage() {
         </section>
 
         {/* Detailed Comparison */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Feature-by-Feature Comparison</h2>
           <div className="max-w-4xl mx-auto space-y-8">
             {comparisonData.map((section) => (
@@ -221,7 +221,7 @@ export default function DocuSignComparisonPage() {
         </section>
 
         {/* Bottom Line */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <Card className="max-w-3xl mx-auto">
             <CardHeader>
               <CardTitle>The Bottom Line</CardTitle>
@@ -248,7 +248,7 @@ export default function DocuSignComparisonPage() {
         </section>
 
         {/* CTA */}
-        <section className="container pb-24">
+        <section className="container mx-auto px-6 pb-24">
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -268,7 +268,7 @@ export default function DocuSignComparisonPage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
           <p className="mt-2">
             DocuSign is a registered trademark of DocuSign, Inc. SendProp is not affiliated with

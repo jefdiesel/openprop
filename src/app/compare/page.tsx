@@ -98,7 +98,7 @@ export default function ComparePage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container mx-auto px-6 flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
             OpenProposal
           </Link>
@@ -115,7 +115,7 @@ export default function ComparePage() {
 
       <main>
         {/* Hero */}
-        <section className="container py-16 md:py-24 text-center">
+        <section className="container mx-auto px-6 py-16 md:py-24 text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
             Why teams switch to OpenProposal
           </h1>
@@ -132,7 +132,7 @@ export default function ComparePage() {
         </section>
 
         {/* Competitor Cards */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Detailed Comparisons</h2>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {competitors.map((comp) => (
@@ -156,7 +156,7 @@ export default function ComparePage() {
         </section>
 
         {/* Pricing Comparison */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-4">Pricing Comparison</h2>
           <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
             OpenProposal uses flat-rate pricing with no per-user fees.
@@ -223,7 +223,7 @@ export default function ComparePage() {
         </section>
 
         {/* Quick Comparison Table */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Feature Comparison</h2>
           <div className="max-w-4xl mx-auto overflow-x-auto">
             <table className="w-full border-collapse">
@@ -280,7 +280,7 @@ export default function ComparePage() {
         </section>
 
         {/* Why OpenProposal */}
-        <section className="container pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Why Choose OpenProposal?</h2>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {whyOpenProposal.map((item, i) => (
@@ -300,7 +300,7 @@ export default function ComparePage() {
         </section>
 
         {/* CTA */}
-        <section className="container pb-24">
+        <section className="container mx-auto px-6 pb-24">
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -322,7 +322,7 @@ export default function ComparePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
