@@ -23,21 +23,30 @@ export async function POST(request: NextRequest) {
     }
 
     if (event.type === 'email.received') {
-      // Log full payload to debug
-      console.log('Resend webhook payload:', JSON.stringify(event.data, null, 2));
-
       const data = event.data;
-      const from = data.from || data.sender || '';
-      const to = data.to || data.recipients || [];
+      const emailId = data.email_id;
+      const from = data.from || '';
+      const to = data.to || [];
       const subject = data.subject || '(no subject)';
-      // Try multiple possible field names for body
-      const html = data.html || data.body?.html || data.content?.html || '';
-      const text = data.text || data.body?.text || data.content?.text || data.body || '';
+
+      // Webhook only contains metadata - fetch actual content via Receiving API
+      let html = '';
+      let text = '';
+
+      if (emailId) {
+        try {
+          const { data: emailContent } = await resend.emails.receiving.get(emailId);
+          html = emailContent?.html || '';
+          text = emailContent?.text || '';
+        } catch (fetchError) {
+          console.error('Failed to fetch email content:', fetchError);
+        }
+      }
 
       // Forward to your email
       if (FORWARD_TO) {
-        const bodyHtml = html || text?.replace(/\n/g, '<br/>') || 'No content received';
-        const bodyText = text || 'No content received';
+        const bodyHtml = html || (text ? text.replace(/\n/g, '<br/>') : 'No content available');
+        const bodyText = text || 'No content available';
 
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
