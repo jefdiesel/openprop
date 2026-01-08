@@ -33,37 +33,22 @@ export async function POST(request: NextRequest) {
       let html = '';
       let text = '';
 
-      let apiDebug = '';
       if (emailId) {
         try {
-          const result = await resend.emails.receiving.get(emailId);
-          apiDebug = JSON.stringify(result, null, 2);
-
-          if (result.error) {
-            apiDebug = `ERROR: ${JSON.stringify(result.error)}`;
-          } else if (result.data) {
-            html = result.data.html || '';
-            text = result.data.text || '';
+          const { data: emailContent, error } = await resend.emails.receiving.get(emailId);
+          if (!error && emailContent) {
+            html = emailContent.html || '';
+            text = emailContent.text || '';
           }
-        } catch (fetchError) {
-          apiDebug = `EXCEPTION: ${fetchError}`;
+        } catch (e) {
+          console.error('Failed to fetch email content:', e);
         }
-      } else {
-        apiDebug = 'No email_id in webhook';
       }
 
       // Forward to your email
       if (FORWARD_TO) {
         const bodyHtml = html || (text ? text.replace(/\n/g, '<br/>') : '');
         const bodyText = text || '';
-
-        // Debug info to include in email
-        const debugInfo = `
-          <div style="background: #f5f5f5; padding: 10px; margin-top: 20px; font-size: 11px; color: #666; border-radius: 4px;">
-            <strong>Debug:</strong> email_id=${emailId || 'none'}, html_len=${html.length}, text_len=${text.length}
-            <pre style="white-space: pre-wrap; word-break: break-all; margin-top: 8px; font-size: 10px;">${apiDebug.substring(0, 2000)}</pre>
-          </div>
-        `;
 
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
@@ -79,10 +64,9 @@ export async function POST(request: NextRequest) {
               <div style="color: #1a1a1a; line-height: 1.6;">
                 ${bodyHtml || '<em style="color: #999;">No content</em>'}
               </div>
-              ${debugInfo}
             </div>
           `,
-          text: `From: ${from}\nTo: ${Array.isArray(to) ? to.join(', ') : to}\n\n${bodyText || '(no content)'}\n\nDebug: email_id=${emailId}, html_len=${html.length}, text_len=${text.length}`,
+          text: `From: ${from}\nTo: ${Array.isArray(to) ? to.join(', ') : to}\n\n${bodyText || '(no content)'}`,
         });
       }
 
