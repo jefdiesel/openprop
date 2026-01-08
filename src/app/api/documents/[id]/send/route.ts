@@ -174,7 +174,8 @@ export async function POST(
     })
 
     // Generate signing URLs for each recipient
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || ''
+    // CRITICAL: Must use production URL for email links, never localhost
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://sendprop.com"
     const signingLinks = createdRecipients.map((recipient) => ({
       email: recipient.email,
       name: recipient.name,

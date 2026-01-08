@@ -37,30 +37,6 @@ interface Integration {
 // Mock integration status - replace with real data from API
 const integrations: Integration[] = [
   {
-    id: "pandadoc",
-    name: "PandaDoc",
-    description: "Import your existing templates and documents from PandaDoc.",
-    icon: (
-      <svg
-        className="h-6 w-6"
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect width="32" height="32" rx="8" fill="#4CAF50" />
-        <path
-          d="M8 10h5c2.5 0 4.5 2 4.5 4.5S15.5 19 13 19H10v4H8V10zm5 7c1.4 0 2.5-1.1 2.5-2.5S14.4 12 13 12h-3v5h3z"
-          fill="white"
-        />
-        <path d="M19 10h5v2h-3v3h2v2h-2v6h-2V10z" fill="white" />
-      </svg>
-    ),
-    category: "document",
-    connected: false,
-    available: true,
-    href: "/settings/integrations/pandadoc",
-  },
-  {
     id: "stripe",
     name: "Stripe",
     description: "Accept payments directly within your proposals and contracts.",

@@ -193,7 +193,8 @@ export async function sendDocument(
     })
 
     // Generate and send emails to each recipient
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    // CRITICAL: Must use production URL, never localhost
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://sendprop.com"
 
     for (const record of recipientRecords) {
       const documentLink = `${baseUrl}/sign/${record.accessToken}`
