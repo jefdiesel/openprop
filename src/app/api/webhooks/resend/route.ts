@@ -55,8 +55,15 @@ export async function POST(request: NextRequest) {
 
       // Forward to your email
       if (FORWARD_TO) {
-        const bodyHtml = html || (text ? text.replace(/\n/g, '<br/>') : 'No content available');
-        const bodyText = text || 'No content available';
+        const bodyHtml = html || (text ? text.replace(/\n/g, '<br/>') : '');
+        const bodyText = text || '';
+
+        // Debug info to include in email
+        const debugInfo = `
+          <div style="background: #f5f5f5; padding: 10px; margin-top: 20px; font-size: 11px; color: #666; border-radius: 4px;">
+            <strong>Debug:</strong> email_id=${emailId || 'none'}, html_len=${html.length}, text_len=${text.length}
+          </div>
+        `;
 
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
@@ -70,11 +77,12 @@ export async function POST(request: NextRequest) {
                 <span style="color: #999;">To:</span> ${Array.isArray(to) ? to.join(', ') : to}
               </div>
               <div style="color: #1a1a1a; line-height: 1.6;">
-                ${bodyHtml}
+                ${bodyHtml || '<em style="color: #999;">No content</em>'}
               </div>
+              ${debugInfo}
             </div>
           `,
-          text: `From: ${from}\nTo: ${Array.isArray(to) ? to.join(', ') : to}\n\n${bodyText}`,
+          text: `From: ${from}\nTo: ${Array.isArray(to) ? to.join(', ') : to}\n\n${bodyText || '(no content)'}\n\nDebug: email_id=${emailId}, html_len=${html.length}, text_len=${text.length}`,
         });
       }
 
