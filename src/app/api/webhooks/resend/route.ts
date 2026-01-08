@@ -35,18 +35,13 @@ export async function POST(request: NextRequest) {
 
       if (emailId) {
         try {
-          // SDK may not have receiving.get yet - call REST API directly
-          const response = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
-            headers: {
-              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            },
-          });
-          if (response.ok) {
-            const emailContent = await response.json();
-            html = emailContent?.html || '';
-            text = emailContent?.text || '';
-          } else {
-            console.error('Receiving API error:', response.status, await response.text());
+          const { data: emailContent, error } = await resend.emails.receiving.get(emailId);
+          if (error) {
+            console.error('Receiving API error:', error);
+          } else if (emailContent) {
+            html = emailContent.html || '';
+            text = emailContent.text || '';
+            console.log('Fetched email content, html length:', html.length, 'text length:', text.length);
           }
         } catch (fetchError) {
           console.error('Failed to fetch email content:', fetchError);
