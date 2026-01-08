@@ -10,6 +10,11 @@ const publicRoutes = ['/', '/login', '/sign', '/api/auth']
 export default auth((req) => {
   const { pathname } = req.nextUrl
 
+  // Skip auth for webhooks and cron - let them through immediately
+  if (pathname.startsWith('/api/webhooks') || pathname.startsWith('/api/cron')) {
+    return NextResponse.next()
+  }
+
   // Check if the current path is a protected route
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
