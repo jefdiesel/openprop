@@ -37,6 +37,9 @@ export default function Home() {
             <Link href="#faq" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
               FAQ
             </Link>
+            <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              Blog
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild>
@@ -448,6 +451,9 @@ export default function Home() {
               </Link>
               <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-zinc-100">
                 Terms
+              </Link>
+              <Link href="/blog" className="hover:text-zinc-900 dark:hover:text-zinc-100">
+                Blog
               </Link>
               <Link href="mailto:hello@sendprop.com" className="hover:text-zinc-900 dark:hover:text-zinc-100">
                 Contact
