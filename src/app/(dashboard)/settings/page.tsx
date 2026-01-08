@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Save, Upload, Check, ExternalLink, Loader2, FileUp, CreditCard, Sparkles, Crown, Wallet } from "lucide-react";
+import { Save, Upload, Check, ExternalLink, Loader2, FileUp, CreditCard, Sparkles, Crown, Wallet, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/use-subscription";
 import {
   Card,
   CardContent,
@@ -52,6 +53,7 @@ interface PlanData {
 }
 
 export default function SettingsPage() {
+  const subscription = useSubscription();
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [formData, setFormData] = React.useState({
@@ -203,6 +205,12 @@ export default function SettingsPage() {
   };
 
   const handleSaveBranding = async () => {
+    // Check if user has access to custom branding
+    if (!subscription.canUseCustomBranding) {
+      toast.error("Custom branding is only available on Pro and higher plans");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/settings", {
@@ -212,11 +220,14 @@ export default function SettingsPage() {
           brandColor: brandingData.brandColor,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to save");
+      }
       toast.success("Branding saved");
     } catch (error) {
       console.error("Failed to save branding:", error);
-      toast.error("Failed to save branding");
+      toast.error(error instanceof Error ? error.message : "Failed to save branding");
     } finally {
       setIsSaving(false);
     }
@@ -344,13 +355,46 @@ export default function SettingsPage() {
         <TabsContent value="branding">
           <Card>
             <CardHeader>
-              <CardTitle>Brand Settings</CardTitle>
-              <CardDescription>
-                Customize the appearance of your documents with your brand
-                colors and logo.
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Brand Settings</CardTitle>
+                  <CardDescription>
+                    Customize the appearance of your documents with your brand
+                    colors and logo.
+                  </CardDescription>
+                </div>
+                {!subscription.canUseCustomBranding && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Lock className="h-3 w-3" />
+                    Pro Feature
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Upgrade Notice for Free Users */}
+              {!subscription.canUseCustomBranding && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+                  <div className="flex items-start gap-3">
+                    <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-100">
+                        Upgrade to Pro for Custom Branding
+                      </h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
+                        Custom branding is available on Pro and higher plans. Upgrade to personalize your documents with your brand colors and logo.
+                      </p>
+                      <Button asChild size="sm" className="mt-3">
+                        <Link href="/pricing">
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          View Pro Plans
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Logo Upload */}
               <div className="space-y-4">
                 <Label>Company Logo</Label>
@@ -392,6 +436,7 @@ export default function SettingsPage() {
                         })
                       }
                       placeholder="#000000"
+                      disabled={!subscription.canUseCustomBranding}
                     />
                     <Input
                       type="color"
@@ -403,6 +448,7 @@ export default function SettingsPage() {
                         })
                       }
                       className="h-10 w-14 cursor-pointer p-1"
+                      disabled={!subscription.canUseCustomBranding}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -412,7 +458,10 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter className="border-t pt-6">
-              <Button onClick={handleSaveBranding} disabled={isSaving}>
+              <Button
+                onClick={handleSaveBranding}
+                disabled={isSaving || !subscription.canUseCustomBranding}
+              >
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

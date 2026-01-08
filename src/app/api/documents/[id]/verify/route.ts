@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { canAccessDocument } from '@/lib/document-access';
 import {
   isBlockchainConfigured,
+  hasBlockchainAddon,
   hashDocumentData,
   hashContent,
   hashEmail,
@@ -62,10 +63,14 @@ export async function GET(
     const configured = isBlockchainConfigured();
 
     if (!document.blockchainTxHash) {
+      // Check if user has the blockchain add-on
+      const hasAddon = await hasBlockchainAddon(userId);
+
       return NextResponse.json({
         verified: false,
         configured,
-        canVerify: configured && document.status === 'completed',
+        canVerify: configured && document.status === 'completed' && hasAddon,
+        requiresAddon: configured && document.status === 'completed' && !hasAddon,
         chainInfo: configured ? getChainInfo() : null,
       });
     }
@@ -145,6 +150,18 @@ export async function POST(
       return NextResponse.json(
         { error: 'Blockchain not configured' },
         { status: 503 }
+      );
+    }
+
+    // Check if user has blockchain add-on subscription
+    const hasAddon = await hasBlockchainAddon(userId);
+    if (!hasAddon) {
+      return NextResponse.json(
+        {
+          error: 'Blockchain verification requires the Blockchain Audit Trail add-on ($19/mo). Please upgrade your subscription to use this feature.',
+          requiresAddon: true
+        },
+        { status: 403 }
       );
     }
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { documents, documentEvents } from '@/lib/db/schema'
+import { documents, documentEvents, subscriptions } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { eq, and, desc, ilike, count } from 'drizzle-orm'
 import * as z from 'zod'
 import type { Block } from '@/types/database'
+import { PLANS, type PlanId } from '@/lib/stripe'
 
 // Schema for saving a document as template
 const saveAsTemplateSchema = z.object({
@@ -166,6 +167,45 @@ export async function POST(request: NextRequest) {
         { error: 'Validation failed', details: validationResult.error.flatten() },
         { status: 400 }
       )
+    }
+
+    // Check subscription limits
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1)
+
+    const planId: PlanId = (subscription?.planId as PlanId) || 'free'
+    const plan = PLANS[planId]
+    const limits = plan.limits
+
+    // Check if user can create templates
+    if (limits.maxTemplates === 0) {
+      return NextResponse.json(
+        { error: 'Template creation not available on free plan. Please upgrade to create templates.' },
+        { status: 403 }
+      )
+    }
+
+    // If there's a limit, check current template count
+    if (limits.maxTemplates !== -1) {
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(documents)
+        .where(
+          and(
+            eq(documents.userId, userId),
+            eq(documents.isTemplate, true)
+          )
+        )
+
+      if (total >= limits.maxTemplates) {
+        return NextResponse.json(
+          { error: `Template limit reached. You have ${total} of ${limits.maxTemplates} templates. Please upgrade to create more.` },
+          { status: 403 }
+        )
+      }
     }
 
     const { document_id, title, content, template_category, variables, settings } = validationResult.data

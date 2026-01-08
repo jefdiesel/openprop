@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { documentEvents } from "@/lib/db/schema";
+import { documentEvents, subscriptions } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, sql, and, gte } from "drizzle-orm";
 import { canAccessDocument } from "@/lib/document-access";
+import { PLANS, type PlanId } from "@/lib/stripe";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -24,6 +25,23 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const access = await canAccessDocument(userId, id);
     if (!access.allowed) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    }
+
+    // Check if user has Business plan (analytics feature)
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1);
+
+    const planId: PlanId = (subscription?.planId as PlanId) || "free";
+    const plan = PLANS[planId];
+
+    if (!plan.limits.analytics) {
+      return NextResponse.json(
+        { error: "Analytics requires Business plan", upgrade: true },
+        { status: 403 }
+      );
     }
 
     // Fetch all events for this document

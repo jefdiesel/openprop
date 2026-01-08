@@ -417,6 +417,7 @@ function DocumentEditorContent({ documentId }: { documentId: string }) {
         onOpenChange={setSendDialogOpen}
         documentId={documentId}
         documentTitle={state.documentTitle}
+        documentBlocks={state.blocks}
         senderName={session?.user?.name || ""}
         senderEmail={session?.user?.email || undefined}
         onSuccess={handleSendSuccess}

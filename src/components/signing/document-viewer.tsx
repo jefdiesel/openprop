@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BlockRenderer } from "@/components/blocks/block-renderer";
 import type { Block } from "@/types/blocks";
 import type { Block as DbBlock } from "@/types/database";
+import { interpolateDocumentContent, type VariableContext } from "@/lib/variables";
 
 interface DocumentViewerProps {
   content: DbBlock[];
@@ -15,6 +16,9 @@ interface DocumentViewerProps {
   className?: string;
   mode?: "sign" | "view";
   downPaymentPercent?: number; // From payment block
+  // Variable interpolation context
+  variableContext?: VariableContext;
+  customVariables?: Record<string, string>;
 }
 
 export function DocumentViewer({
@@ -26,10 +30,61 @@ export function DocumentViewer({
   className,
   mode = "sign",
   downPaymentPercent,
+  variableContext = {},
+  customVariables = {},
 }: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const blockRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Interpolate variables in content before rendering
+  // Only apply in viewer mode (sign/view), not in edit mode
+  const interpolatedContent = useMemo(() => {
+    // Convert DbBlock[] to the format expected by interpolateDocumentContent
+    const blocksForInterpolation = content.map(block => {
+      // Handle both nested data format and flat format
+      const data = (block as any).data || block;
+      return {
+        type: block.type,
+        data: data
+      };
+    });
+
+    // Interpolate variables
+    const interpolated = interpolateDocumentContent(
+      blocksForInterpolation,
+      customVariables,
+      variableContext
+    );
+
+    // Convert back to DbBlock format
+    return content.map((originalBlock, index) => {
+      const interpolatedBlock = interpolated[index];
+
+      // Only update if the block was actually interpolated (text blocks)
+      if (originalBlock.type === 'text' && interpolatedBlock.data.content !== undefined) {
+        // Preserve the original structure but update the content
+        const hasDataProp = (originalBlock as any).data !== undefined;
+        if (hasDataProp) {
+          return {
+            ...originalBlock,
+            data: {
+              ...(originalBlock as any).data,
+              content: interpolatedBlock.data.content
+            }
+          } as DbBlock;
+        } else {
+          // Flat structure
+          return {
+            ...originalBlock,
+            content: interpolatedBlock.data.content
+          } as DbBlock;
+        }
+      }
+
+      return originalBlock;
+    });
+  }, [content, customVariables, variableContext]);
 
   // Handle scroll progress
   useEffect(() => {
@@ -51,7 +106,7 @@ export function DocumentViewer({
     handleScroll(); // Initial calculation
 
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [content]);
+  }, [interpolatedContent]);
 
   // Block visibility tracking with IntersectionObserver
   useEffect(() => {
@@ -76,7 +131,7 @@ export function DocumentViewer({
     });
 
     return () => observer.disconnect();
-  }, [content, onBlockView]);
+  }, [interpolatedContent, onBlockView]);
 
   // Link click tracking
   useEffect(() => {
@@ -229,7 +284,7 @@ export function DocumentViewer({
 
           {/* Document blocks */}
           <div className="space-y-4 sm:space-y-6">
-            {content.map((dbBlock) => {
+            {interpolatedContent.map((dbBlock) => {
               const block = mapDbBlockToComponentBlock(dbBlock);
               if (!block) {
                 // Render unsupported blocks as a simple display

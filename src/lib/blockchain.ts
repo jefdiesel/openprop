@@ -1,6 +1,10 @@
 import { createPublicClient, createWalletClient, http, keccak256, toHex, type Hash, type Address } from 'viem';
 import { base } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
+import { db } from '@/lib/db';
+import { subscriptions, subscriptionAddons } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { ADD_ONS } from '@/lib/stripe';
 
 // Types
 export interface DocumentHashData {
@@ -27,6 +31,60 @@ const BLOCKCHAIN_PRIVATE_KEY = process.env.BLOCKCHAIN_PRIVATE_KEY;
 
 export function isBlockchainConfigured(): boolean {
   return !!BLOCKCHAIN_PRIVATE_KEY;
+}
+
+/**
+ * Check if a user has an active blockchain add-on subscription
+ * @param userId - The user ID to check
+ * @returns Promise<boolean> - True if user has active blockchain add-on
+ */
+export async function hasBlockchainAddon(userId: string): Promise<boolean> {
+  try {
+    // Get the blockchain add-on price ID from Stripe config
+    const blockchainAddonPriceId = ADD_ONS.blockchain_audit.stripePriceIdMonthly;
+
+    if (!blockchainAddonPriceId) {
+      console.warn('Blockchain add-on price ID not configured in Stripe');
+      return false;
+    }
+
+    // Find active subscription for this user
+    const userSubscription = await db
+      .select({
+        id: subscriptions.id,
+        status: subscriptions.status,
+      })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.status, 'active')
+        )
+      )
+      .limit(1);
+
+    if (!userSubscription || userSubscription.length === 0) {
+      return false;
+    }
+
+    // Check if subscription has blockchain add-on
+    const addon = await db
+      .select()
+      .from(subscriptionAddons)
+      .where(
+        and(
+          eq(subscriptionAddons.subscriptionId, userSubscription[0].id),
+          eq(subscriptionAddons.addonId, 'blockchain_audit'),
+          eq(subscriptionAddons.status, 'active')
+        )
+      )
+      .limit(1);
+
+    return addon.length > 0;
+  } catch (error) {
+    console.error('Error checking blockchain add-on subscription:', error);
+    return false;
+  }
 }
 
 export function getPublicClient() {

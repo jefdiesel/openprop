@@ -38,6 +38,8 @@ const sendDocumentSchema = z.object({
   passwordProtected: z.boolean().default(false),
   senderName: z.string().optional().default(""),
   senderEmail: z.string().email().optional(),
+  // Variable values for interpolation
+  variables: z.record(z.string(), z.string()).optional(),
   // Payment collection settings
   paymentEnabled: z.boolean().default(false),
   paymentTiming: z.enum(["due_now", "net_30", "net_60"]).optional(),
@@ -89,6 +91,7 @@ export async function sendDocument(
       emailMessage,
       expiresAt,
       senderName,
+      variables,
       paymentEnabled,
       paymentTiming,
       paymentAmount,
@@ -166,7 +169,7 @@ export async function sendDocument(
         }
       : { enabled: false }
 
-    // Update document status to 'sent' with payment settings
+    // Update document status to 'sent' with payment settings and variables
     await db
       .update(documents)
       .set({
@@ -174,6 +177,7 @@ export async function sendDocument(
         sentAt: new Date(),
         expiresAt: parsedExpiresAt,
         updatedAt: new Date(),
+        variables: variables || undefined,
         settings: paymentSettings,
       })
       .where(eq(documents.id, documentId))

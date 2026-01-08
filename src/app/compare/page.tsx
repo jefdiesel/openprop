@@ -68,6 +68,7 @@ const comparisonFeatures = [
   { feature: "Team plan (10 users)", sendprop: "$29/mo total", docusign: "~$450/mo", pandadoc: "~$350/mo" },
   { feature: "E-signatures included", sendprop: true, docusign: true, pandadoc: true },
   { feature: "Drag-and-drop builder", sendprop: true, docusign: false, pandadoc: true },
+  { feature: "Variables/merge fields", sendprop: true, docusign: true, pandadoc: true },
   { feature: "Payment collection", sendprop: true, docusign: false, pandadoc: "Add-on" },
   { feature: "Blockchain verification", sendprop: true, docusign: false, pandadoc: false },
   { feature: "Templates included", sendprop: true, docusign: true, pandadoc: true },

@@ -354,6 +354,7 @@ export interface Plan {
     analytics: boolean;
     maxSeats: number; // -1 for unlimited
     storageGb: number; // -1 for BYOS/unlimited
+    maxTemplates: number; // 0 for none, -1 for unlimited
   };
 }
 
@@ -395,6 +396,7 @@ export const PLANS: Record<PlanId, Plan> = {
       analytics: false,
       maxSeats: -1, // Unlimited for self-hosted
       storageGb: -1, // BYOS
+      maxTemplates: 0, // Cannot create templates
     },
   },
   pro: {
@@ -426,6 +428,7 @@ export const PLANS: Record<PlanId, Plan> = {
       analytics: false,
       maxSeats: 10,
       storageGb: 5, // 10GB for annual
+      maxTemplates: 10,
     },
   },
   business: {
@@ -459,6 +462,7 @@ export const PLANS: Record<PlanId, Plan> = {
       analytics: true,
       maxSeats: -1, // Unlimited
       storageGb: 25,
+      maxTemplates: -1, // Unlimited
     },
   },
   // Team Plans (for organizations)
@@ -491,6 +495,7 @@ export const PLANS: Record<PlanId, Plan> = {
       analytics: false,
       maxSeats: 10,
       storageGb: 5,
+      maxTemplates: 10,
     },
   },
   business_team: {
@@ -524,6 +529,7 @@ export const PLANS: Record<PlanId, Plan> = {
       analytics: true,
       maxSeats: -1, // Unlimited
       storageGb: 25,
+      maxTemplates: -1, // Unlimited
     },
   },
 };

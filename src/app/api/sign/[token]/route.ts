@@ -13,6 +13,7 @@ import {
 } from "@/lib/email-templates";
 import {
   isBlockchainConfigured,
+  hasBlockchainAddon,
   hashDocumentData,
   hashContent,
   hashEmail,
@@ -457,6 +458,13 @@ async function triggerBlockchainVerification(documentId: string, completedAt: Da
       return;
     }
 
+    // Check if the document owner has the blockchain add-on
+    const hasAddon = await hasBlockchainAddon(document.userId);
+    if (!hasAddon) {
+      console.log(`Blockchain inscription skipped for document ${documentId} - user does not have blockchain add-on subscription`);
+      return;
+    }
+
     // Get signers
     const signersList = await db.select()
       .from(recipients)
@@ -527,6 +535,24 @@ async function runEthscriptions(
 ): Promise<{ network: string; txHash: string; explorerUrl: string } | undefined> {
   if (!isBlockchainConfigured()) {
     console.log("Ethscriptions skipped - blockchain not configured");
+    return;
+  }
+
+  // Get document owner to check for blockchain add-on
+  const [document] = await db.select({ userId: documents.userId })
+    .from(documents)
+    .where(eq(documents.id, documentId))
+    .limit(1);
+
+  if (!document) {
+    console.log("Ethscriptions skipped - document not found");
+    return;
+  }
+
+  // Check if the document owner has the blockchain add-on
+  const hasAddon = await hasBlockchainAddon(document.userId);
+  if (!hasAddon) {
+    console.log(`Ethscriptions skipped for document ${documentId} - user does not have blockchain add-on subscription`);
     return;
   }
 

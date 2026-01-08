@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 // Types
 interface PandaDocItem {
@@ -41,75 +42,8 @@ interface PandaDocItem {
   name: string;
   type: "template" | "document";
   status?: string;
-  dateCreated: string;
-  dateModified: string;
+  modifiedAt: string;
 }
-
-// Mock data for templates and documents
-const mockTemplates: PandaDocItem[] = [
-  {
-    id: "tpl_1",
-    name: "Service Agreement Template",
-    type: "template",
-    dateCreated: "2024-01-01T10:00:00Z",
-    dateModified: "2024-01-10T15:30:00Z",
-  },
-  {
-    id: "tpl_2",
-    name: "Project Proposal Template",
-    type: "template",
-    dateCreated: "2023-12-15T09:00:00Z",
-    dateModified: "2024-01-05T11:20:00Z",
-  },
-  {
-    id: "tpl_3",
-    name: "NDA Template",
-    type: "template",
-    dateCreated: "2023-11-20T14:00:00Z",
-    dateModified: "2023-12-28T16:45:00Z",
-  },
-  {
-    id: "tpl_4",
-    name: "Consulting Agreement",
-    type: "template",
-    dateCreated: "2023-10-10T08:00:00Z",
-    dateModified: "2024-01-02T09:15:00Z",
-  },
-  {
-    id: "tpl_5",
-    name: "Sales Quote Template",
-    type: "template",
-    dateCreated: "2023-09-05T11:00:00Z",
-    dateModified: "2023-12-20T13:30:00Z",
-  },
-];
-
-const mockDocuments: PandaDocItem[] = [
-  {
-    id: "doc_1",
-    name: "Acme Corp - Service Agreement",
-    type: "document",
-    status: "completed",
-    dateCreated: "2024-01-12T10:00:00Z",
-    dateModified: "2024-01-14T15:30:00Z",
-  },
-  {
-    id: "doc_2",
-    name: "Tech Startup - Project Proposal",
-    type: "document",
-    status: "completed",
-    dateCreated: "2024-01-08T09:00:00Z",
-    dateModified: "2024-01-10T11:20:00Z",
-  },
-  {
-    id: "doc_3",
-    name: "Global Inc - NDA",
-    type: "document",
-    status: "draft",
-    dateCreated: "2024-01-05T14:00:00Z",
-    dateModified: "2024-01-06T16:45:00Z",
-  },
-];
 
 type ImportStep = "connect" | "select" | "configure" | "import" | "success";
 
@@ -125,8 +59,11 @@ export default function PandaDocImportPage() {
   const [currentStep, setCurrentStep] = React.useState<ImportStep>("connect");
   const [isConnected, setIsConnected] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [loadingItems, setLoadingItems] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [contentType, setContentType] = React.useState<"templates" | "documents">("templates");
+  const [templates, setTemplates] = React.useState<PandaDocItem[]>([]);
+  const [documents, setDocuments] = React.useState<PandaDocItem[]>([]);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
   const [importOptions, setImportOptions] = React.useState<ImportOptions>({
     importAsTemplates: true,
@@ -138,10 +75,52 @@ export default function PandaDocImportPage() {
   const [importedCount, setImportedCount] = React.useState(0);
   const [failedCount, setFailedCount] = React.useState(0);
 
-  const items = contentType === "templates" ? mockTemplates : mockDocuments;
+  const items = contentType === "templates" ? templates : documents;
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fetch templates from API
+  const fetchTemplates = async () => {
+    setLoadingItems(true);
+    try {
+      const res = await fetch('/api/integrations/pandadoc/templates');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setTemplates(data.templates.map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        type: 'template' as const,
+        status: 'template',
+        modifiedAt: t.date_modified
+      })));
+    } catch (e) {
+      toast.error('Failed to load templates');
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+  // Fetch documents from API
+  const fetchDocuments = async () => {
+    setLoadingItems(true);
+    try {
+      const res = await fetch('/api/integrations/pandadoc/documents');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setDocuments(data.documents.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        type: 'document' as const,
+        status: d.status,
+        modifiedAt: d.date_modified
+      })));
+    } catch (e) {
+      toast.error('Failed to load documents');
+    } finally {
+      setLoadingItems(false);
+    }
+  };
 
   // Check connection on mount
   React.useEffect(() => {
@@ -161,6 +140,17 @@ export default function PandaDocImportPage() {
     };
     checkConnection();
   }, []);
+
+  // Fetch templates/documents when step changes or tab changes
+  React.useEffect(() => {
+    if (currentStep === 'select' && isConnected) {
+      if (contentType === 'templates') {
+        fetchTemplates();
+      } else {
+        fetchDocuments();
+      }
+    }
+  }, [currentStep, contentType, isConnected]);
 
   const handleConnect = async () => {
     setIsLoading(true);
@@ -199,34 +189,60 @@ export default function PandaDocImportPage() {
     setSelectedItems(newSelected);
   };
 
+  const pollJobStatus = async (jobId: string) => {
+    try {
+      const res = await fetch(`/api/integrations/pandadoc/import?jobId=${jobId}`);
+      const { job } = await res.json();
+
+      setImportProgress(job.progress);
+      setImportedCount(job.importedItems);
+      setFailedCount(job.failedItems);
+
+      if (job.status === 'processing') {
+        setTimeout(() => pollJobStatus(jobId), 1000);
+      } else if (job.status === 'completed') {
+        setCurrentStep('success');
+      } else if (job.status === 'failed') {
+        toast.error('Import failed');
+        setCurrentStep('configure');
+      }
+    } catch (e) {
+      toast.error('Failed to check import status');
+    }
+  };
+
   const handleStartImport = async () => {
     setCurrentStep("import");
     setImportProgress(0);
     setImportedCount(0);
     setFailedCount(0);
 
-    const totalItems = selectedItems.size;
-    let processed = 0;
-    let failed = 0;
+    const selectedItemsArray = [...selectedItems].map(id => {
+      const template = templates.find(t => t.id === id);
+      const document = documents.find(d => d.id === id);
+      return {
+        id,
+        type: template ? 'template' : 'document'
+      };
+    });
 
-    // Simulate import process
-    for (const itemId of selectedItems) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      processed++;
+    try {
+      const res = await fetch('/api/integrations/pandadoc/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: selectedItemsArray,
+          options: importOptions
+        })
+      });
 
-      // Simulate occasional failures (10% chance)
-      if (Math.random() < 0.1) {
-        failed++;
-        setFailedCount(failed);
-      } else {
-        setImportedCount(processed - failed);
-      }
-
-      setImportProgress(Math.round((processed / totalItems) * 100));
+      if (!res.ok) throw new Error('Failed to start import');
+      const { jobId } = await res.json();
+      pollJobStatus(jobId);
+    } catch (e) {
+      toast.error('Failed to start import');
+      setCurrentStep('configure');
     }
-
-    // Complete
-    setCurrentStep("success");
   };
 
   const formatDate = (dateString: string) => {
@@ -368,7 +384,7 @@ export default function PandaDocImportPage() {
             }}
           >
             <FolderOpen className="mr-2 h-4 w-4" />
-            Templates ({mockTemplates.length})
+            Templates ({templates.length})
           </Button>
           <Button
             variant={contentType === "documents" ? "default" : "outline"}
@@ -378,7 +394,7 @@ export default function PandaDocImportPage() {
             }}
           >
             <FileText className="mr-2 h-4 w-4" />
-            Documents ({mockDocuments.length})
+            Documents ({documents.length})
           </Button>
         </div>
         <Badge variant="secondary">
@@ -405,7 +421,15 @@ export default function PandaDocImportPage() {
       {/* Items List */}
       <Card>
         <CardContent className="p-0">
-          {filteredItems.length > 0 ? (
+          {loadingItems ? (
+            <div className="py-12 text-center">
+              <Loader2 className="mx-auto h-12 w-12 text-muted-foreground/50 animate-spin" />
+              <h3 className="mt-4 text-sm font-medium">Loading {contentType}...</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Please wait while we fetch your {contentType} from PandaDoc.
+              </p>
+            </div>
+          ) : filteredItems.length > 0 ? (
             <div className="divide-y">
               {filteredItems.map((item) => (
                 <label
@@ -429,7 +453,7 @@ export default function PandaDocImportPage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Modified {formatDate(item.dateModified)}
+                      Modified {formatDate(item.modifiedAt)}
                     </p>
                   </div>
                   {item.type === "template" ? (

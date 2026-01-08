@@ -61,12 +61,15 @@ import {
   defaultPaymentSettings,
   type PaymentSettings
 } from "@/components/builder/payment-settings"
+import { getDocumentVariables } from "@/lib/variables"
 
 interface SendDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   documentId: string
   documentTitle: string
+  documentBlocks?: Array<{ type: string; data: unknown }>
+  documentVariables?: Record<string, string>
   senderName?: string
   senderEmail?: string
   onSuccess?: () => void
@@ -82,6 +85,8 @@ export function SendDialog({
   onOpenChange,
   documentId,
   documentTitle,
+  documentBlocks = [],
+  documentVariables = {},
   senderName = "",
   senderEmail,
   onSuccess,
@@ -91,6 +96,20 @@ export function SendDialog({
 }: SendDialogProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  // Extract custom variables from document blocks
+  const { custom: customVariables } = getDocumentVariables(
+    documentBlocks as Array<{ type: string; data: Record<string, unknown> }>
+  )
+
+  // Variable values state - pre-fill with document variables if available
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    customVariables.forEach(varName => {
+      initial[varName] = documentVariables[varName] || ""
+    })
+    return initial
+  })
 
   // Recipients state
   const [recipients, setRecipients] = useState<Recipient[]>([
@@ -231,6 +250,14 @@ export function SendDialog({
       return
     }
 
+    // Validate that all custom variables have values
+    const emptyVars = customVariables.filter(varName => !variableValues[varName]?.trim())
+    if (emptyVars.length > 0) {
+      setError(`Please fill in all variables: ${emptyVars.join(", ")}`)
+      setActiveTab("recipients")
+      return
+    }
+
     startTransition(async () => {
       const input: SendDocumentInput = {
         documentId,
@@ -248,6 +275,8 @@ export function SendDialog({
         passwordProtected,
         senderName,
         senderEmail,
+        // Variable values for interpolation
+        variables: variableValues,
         // Payment settings
         paymentEnabled: paymentSettings.enabled,
         paymentTiming: paymentSettings.enabled ? paymentSettings.timing : undefined,
@@ -271,6 +300,7 @@ export function SendDialog({
         setExpiresAt("")
         setPasswordProtected(false)
         setPaymentSettings(defaultPaymentSettings)
+        setVariableValues({})
         setActiveTab("recipients")
       } else {
         setError(result.error || "Failed to send document")
@@ -278,6 +308,8 @@ export function SendDialog({
     })
   }, [
     validateRecipients,
+    customVariables,
+    variableValues,
     documentId,
     documentTitle,
     recipients,
@@ -422,6 +454,43 @@ export function SendDialog({
                   </SortableContext>
                 </DndContext>
               </div>
+
+              {/* Variable Values Section - Only show if there are custom variables */}
+              {customVariables.length > 0 && (
+                <>
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-base">Document Variables</Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Fill in values for custom variables in your document. These values will apply to all recipients.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {customVariables.map((varName) => (
+                        <div key={varName} className="space-y-2">
+                          <Label htmlFor={`var-${varName}`}>
+                            {varName}
+                          </Label>
+                          <Input
+                            id={`var-${varName}`}
+                            value={variableValues[varName] || ""}
+                            onChange={(e) => {
+                              setVariableValues(prev => ({
+                                ...prev,
+                                [varName]: e.target.value
+                              }))
+                            }}
+                            placeholder={`Enter value for ${varName}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <Separator />
 

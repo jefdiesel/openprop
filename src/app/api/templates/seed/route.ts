@@ -677,7 +677,7 @@ export async function POST() {
       return NextResponse.json({ message: "Templates already exist", count: 0 })
     }
 
-    // Insert starter templates
+    // Insert starter templates - available to ALL users regardless of plan
     const insertedTemplates = await db
       .insert(documents)
       .values(

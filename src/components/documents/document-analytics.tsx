@@ -8,10 +8,14 @@ import {
   ArrowDown,
   CheckCircle,
   TrendingUp,
+  Lock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/hooks/use-subscription";
+import Link from "next/link";
 
 interface DocumentAnalyticsProps {
   documentId: string;
@@ -57,12 +61,21 @@ export function DocumentAnalytics({
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsUpgrade, setNeedsUpgrade] = useState(false);
+  const subscription = useSubscription();
 
   useEffect(() => {
     async function fetchAnalytics() {
       try {
         const res = await fetch(`/api/documents/${documentId}/analytics`);
-        if (!res.ok) throw new Error("Failed to load analytics");
+        if (!res.ok) {
+          const data = await res.json();
+          if (res.status === 403 && data.upgrade) {
+            setNeedsUpgrade(true);
+            return;
+          }
+          throw new Error("Failed to load analytics");
+        }
         const data = await res.json();
         // Transform API response to component format
         setAnalytics({
@@ -85,12 +98,37 @@ export function DocumentAnalytics({
     fetchAnalytics();
   }, [documentId]);
 
-  if (isLoading) {
+  if (isLoading || subscription.loading) {
     return (
       <div className={className}>
         <div className="flex items-center justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
+      </div>
+    );
+  }
+
+  // Show upgrade prompt if user doesn't have analytics access
+  if (needsUpgrade || !subscription.canAccessAnalytics) {
+    return (
+      <div className={className}>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 rounded-full bg-primary/10 p-4">
+              <Lock className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold">
+              Analytics Requires Business Plan
+            </h3>
+            <p className="mb-6 max-w-md text-sm text-muted-foreground">
+              Unlock detailed analytics to track document views, engagement,
+              and viewer behavior. Upgrade to Business to access this feature.
+            </p>
+            <Button asChild>
+              <Link href="/settings/team/billing">Upgrade to Business</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

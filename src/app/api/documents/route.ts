@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { eq, and, desc, asc, ilike, sql, count, isNull } from 'drizzle-orm'
 import * as z from 'zod'
 import type { Block } from '@/types/database'
+import { canCreateTemplate } from '@/lib/templates'
 
 // Schema for creating a document
 const createDocumentSchema = z.object({
@@ -201,6 +202,21 @@ export async function POST(request: NextRequest) {
     }
 
     const { title, content, is_template, template_category, variables, settings } = validationResult.data
+
+    // Check template limit if creating a template
+    if (is_template) {
+      const templateCheck = await canCreateTemplate(userId)
+      if (!templateCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: "Template limit reached",
+            upgrade: true,
+            message: "Upgrade to Team or Business plan to create templates"
+          },
+          { status: 403 }
+        )
+      }
+    }
 
     // Create document (in team context if applicable)
     const [document] = await db.insert(documents)

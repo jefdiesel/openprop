@@ -10,6 +10,7 @@ import {
 } from "@/lib/organizations";
 import { requireOrgPermission } from "@/lib/permissions";
 import { PLAN_LIMITS, PlanId } from "@/lib/organizations";
+import { PLANS } from "@/lib/stripe";
 
 // GET /api/organizations/[id] - Get organization details
 export async function GET(
@@ -89,6 +90,26 @@ export async function PUT(
 
     const body = await request.json();
     const { name, logoUrl, brandColor } = body;
+
+    // Check if user is trying to update branding (brandColor or logoUrl)
+    if (brandColor !== undefined || logoUrl !== undefined) {
+      // Get organization's subscription to check limits
+      const subscription = await getOrganizationSubscription(orgId);
+      const planId = (subscription?.planId || "free") as keyof typeof PLANS;
+      const plan = PLANS[planId];
+
+      // Check if customBranding is allowed
+      if (plan && !plan.limits.customBranding) {
+        return NextResponse.json(
+          {
+            error: "Custom branding is only available on Pro and higher team plans. Please upgrade to customize your organization's brand colors and logo.",
+            requiresUpgrade: true,
+            feature: "customBranding"
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (name !== undefined) {

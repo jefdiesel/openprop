@@ -1,6 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Plus, FileText, Pencil, Copy } from "lucide-react";
+import { Plus, FileText, Pencil, Copy, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,31 +13,56 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { documents } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
 import { SeedTemplatesButton } from "./seed-button";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useEffect, useState } from "react";
 
-export default async function TemplatesPage() {
-  const session = await auth();
+interface Template {
+  id: string;
+  title: string;
+  template_category: string | null;
+  created_at: string;
+  updated_at: string;
+  source: "user" | "starter";
+}
 
-  if (!session?.user?.id) {
-    redirect("/login");
+export default function TemplatesPage() {
+  const subscription = useSubscription();
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTemplates() {
+      try {
+        const res = await fetch("/api/templates?include_public=false");
+        if (res.ok) {
+          const data = await res.json();
+          // Filter only user templates
+          const userTemplates = (data.templates || []).filter(
+            (t: Template) => t.source === "user"
+          );
+          setTemplates(userTemplates);
+        }
+      } catch (error) {
+        console.error("Failed to fetch templates:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchTemplates();
+  }, []);
+
+  if (isLoading || subscription.loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
-  // Fetch user's templates
-  const templates = await db
-    .select({
-      id: documents.id,
-      title: documents.title,
-      category: documents.templateCategory,
-      createdAt: documents.createdAt,
-      updatedAt: documents.updatedAt,
-    })
-    .from(documents)
-    .where(and(eq(documents.userId, session.user.id), eq(documents.isTemplate, true)))
-    .orderBy(desc(documents.updatedAt));
+  const templateCount = templates.length;
+  const canCreateMore = subscription.canCreateTemplates &&
+    (subscription.maxTemplates === -1 || templateCount < subscription.maxTemplates);
 
   return (
     <div className="space-y-8">
@@ -47,13 +73,36 @@ export default async function TemplatesPage() {
           <p className="text-muted-foreground">
             Start with a template to create professional documents faster.
           </p>
+          {subscription.canCreateTemplates && subscription.maxTemplates !== -1 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {templateCount} of {subscription.maxTemplates} templates used
+            </p>
+          )}
         </div>
-        <Button asChild>
-          <Link href="/templates/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Template
-          </Link>
-        </Button>
+        {subscription.canCreateTemplates ? (
+          canCreateMore ? (
+            <Button asChild>
+              <Link href="/templates/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Template
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link href="/pricing">
+                <Crown className="mr-2 h-4 w-4" />
+                Upgrade for More Templates
+              </Link>
+            </Button>
+          )
+        ) : (
+          <Button asChild>
+            <Link href="/pricing">
+              <Crown className="mr-2 h-4 w-4" />
+              Upgrade to Create Templates
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Templates List */}
@@ -67,12 +116,21 @@ export default async function TemplatesPage() {
             </p>
             <div className="mt-6 flex gap-3">
               <SeedTemplatesButton />
-              <Button variant="outline" asChild>
-                <Link href="/templates/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Blank
-                </Link>
-              </Button>
+              {subscription.canCreateTemplates ? (
+                <Button variant="outline" asChild>
+                  <Link href="/templates/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Blank
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link href="/pricing">
+                    <Crown className="mr-2 h-4 w-4" />
+                    Upgrade to Create
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -99,14 +157,14 @@ export default async function TemplatesPage() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    {template.category ? (
-                      <Badge variant="secondary">{template.category}</Badge>
+                    {template.template_category ? (
+                      <Badge variant="secondary">{template.template_category}</Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {template.updatedAt.toLocaleDateString()}
+                    {new Date(template.updated_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

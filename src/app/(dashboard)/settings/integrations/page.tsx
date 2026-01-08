@@ -95,8 +95,8 @@ const integrations: Integration[] = [
     ),
     category: "document",
     connected: false,
-    available: false,
-    comingSoon: true,
+    available: true,
+    href: "/settings/integrations/docusign",
   },
   {
     id: "hubspot",
@@ -162,8 +162,8 @@ const integrations: Integration[] = [
     ),
     category: "storage",
     connected: false,
-    available: false,
-    comingSoon: true,
+    available: true,
+    href: "/settings/integrations/google-drive",
   },
   {
     id: "dropbox",
@@ -176,8 +176,8 @@ const integrations: Integration[] = [
     ),
     category: "storage",
     connected: false,
-    available: false,
-    comingSoon: true,
+    available: true,
+    href: "/settings/integrations/dropbox",
   },
   {
     id: "quickbooks",
@@ -197,8 +197,8 @@ const integrations: Integration[] = [
     ),
     category: "payment",
     connected: false,
-    available: false,
-    comingSoon: true,
+    available: true,
+    href: "/settings/integrations/quickbooks",
   },
 ];
 

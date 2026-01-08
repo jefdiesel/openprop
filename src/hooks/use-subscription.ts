@@ -19,6 +19,7 @@ interface SubscriptionState {
     analytics: boolean
     maxSeats: number
     storageGb: number
+    maxTemplates: number
   }
   loading: boolean
   error: string | null
@@ -76,6 +77,8 @@ export function useSubscription() {
   const canAccessApi = state.limits.apiAccess
   const hasPrioritySupport = state.limits.prioritySupport
   const maxWorkspaces = state.limits.workspaces
+  const canCreateTemplates = state.limits.maxTemplates !== 0
+  const maxTemplates = state.limits.maxTemplates
 
   const isPaidPlan = state.planId !== "free"
   const isProPlan = state.planId === "pro"
@@ -91,6 +94,8 @@ export function useSubscription() {
     canAccessApi,
     hasPrioritySupport,
     maxWorkspaces,
+    canCreateTemplates,
+    maxTemplates,
     // Plan checks
     isPaidPlan,
     isProPlan,

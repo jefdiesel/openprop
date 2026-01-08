@@ -23,6 +23,13 @@ export type SpacerSize = "small" | "medium" | "large";
 
 export type SignatureType = "draw" | "type";
 
+// Variable Definition for merge fields
+export interface VariableDefinition {
+  name: string;
+  defaultValue: string;
+  description?: string;
+}
+
 // Base block interface
 export interface BlockBase {
   id: string;

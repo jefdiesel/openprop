@@ -36,6 +36,7 @@ const comparisonData = [
       { feature: "Drag-and-drop document builder", sendprop: true, docusign: false },
       { feature: "Built-in payment collection", sendprop: true, docusign: false },
       { feature: "Proposal templates", sendprop: true, docusign: "Limited" },
+      { feature: "Variables/merge fields", sendprop: true, docusign: true },
       { feature: "Document reminders", sendprop: true, docusign: true },
       { feature: "Blockchain verification", sendprop: true, docusign: false },
     ],

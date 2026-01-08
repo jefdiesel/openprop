@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { users, profiles } from "@/lib/db/schema";
+import { users, profiles, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { PLANS, type PlanId } from "@/lib/stripe";
 
 export async function GET() {
   const session = await auth();
@@ -52,6 +53,31 @@ export async function PUT(request: Request) {
 
   // Update profile if any profile fields provided
   if (body.companyName !== undefined || body.brandColor !== undefined || body.walletAddress !== undefined) {
+    // Check if user is trying to update branding (brandColor)
+    if (body.brandColor !== undefined) {
+      // Get user's subscription to check limits
+      const [subscription] = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
+
+      const planId: PlanId = (subscription?.planId as PlanId) || "free";
+      const plan = PLANS[planId];
+
+      // Check if customBranding is allowed
+      if (!plan.limits.customBranding) {
+        return NextResponse.json(
+          {
+            error: "Custom branding is only available on Pro and higher plans. Please upgrade to customize your brand colors.",
+            requiresUpgrade: true,
+            feature: "customBranding"
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Validate wallet address format if provided
     if (body.walletAddress !== undefined && body.walletAddress !== null && body.walletAddress !== "") {
       if (!body.walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {

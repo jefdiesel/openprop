@@ -22,6 +22,8 @@ interface VerificationData {
   documentHash?: string;
   verifiedAt?: string;
   baseScanUrl?: string;
+  requiresAddon?: boolean;
+  error?: string;
 }
 
 interface VerificationSectionProps {
@@ -65,6 +67,13 @@ export function VerificationSection({
       const result = await res.json();
 
       if (!res.ok) {
+        // Check if it's an add-on requirement error
+        if (result.requiresAddon) {
+          toast.error(result.error || "Blockchain add-on required");
+          // Update data to show the add-on requirement
+          setData(prev => prev ? { ...prev, requiresAddon: true, error: result.error } : null);
+          return;
+        }
         throw new Error(result.error || "Failed to inscribe");
       }
 
@@ -156,6 +165,38 @@ export function VerificationSection({
                 </a>
               </Button>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Requires add-on
+  if (data?.requiresAddon || data?.error?.includes('add-on')) {
+    return (
+      <Card className={className}>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Shield className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Blockchain Inscription</p>
+                <p className="text-sm text-muted-foreground">
+                  Requires Blockchain Audit Trail add-on ($19/mo)
+                </p>
+              </div>
+            </div>
+            <Button
+              asChild
+              variant="default"
+              size="sm"
+            >
+              <a href="/settings/billing">
+                Upgrade
+              </a>
+            </Button>
           </div>
         </CardContent>
       </Card>
