@@ -9,6 +9,7 @@ import {
   Link2,
   Settings,
   Zap,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,8 +35,8 @@ interface Integration {
   comingSoon?: boolean;
 }
 
-// Mock integration status - replace with real data from API
-const integrations: Integration[] = [
+// Base integration configurations (connection status will be fetched from API)
+const baseIntegrations: Integration[] = [
   {
     id: "stripe",
     name: "Stripe",
@@ -46,7 +47,7 @@ const integrations: Integration[] = [
       </svg>
     ),
     category: "payment",
-    connected: true,
+    connected: true, // Stripe is hardcoded as connected (profile-based)
     available: true,
     href: "/settings",
   },
@@ -193,6 +194,65 @@ const categoryIcons: Record<Integration["category"], React.ReactNode> = {
 };
 
 export default function IntegrationsPage() {
+  const [integrations, setIntegrations] = React.useState<Integration[]>(baseIntegrations);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchIntegrationStatuses() {
+      setIsLoading(true);
+
+      // Map of integration IDs to their status API endpoints
+      const statusEndpoints: Record<string, string> = {
+        quickbooks: '/api/integrations/quickbooks/status',
+        docusign: '/api/integrations/docusign/status',
+        google_drive: '/api/integrations/google-drive/status',
+        dropbox: '/api/integrations/dropbox/status',
+        hubspot: '/api/integrations/hubspot/status',
+        salesforce: '/api/integrations/salesforce/status',
+      };
+
+      // Fetch status for all integrations in parallel
+      const statusPromises = Object.entries(statusEndpoints).map(
+        async ([integrationId, endpoint]) => {
+          try {
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+              console.error(`Failed to fetch ${integrationId} status:`, response.statusText);
+              return { id: integrationId, connected: false };
+            }
+            const data = await response.json();
+            return { id: integrationId, connected: data.connected };
+          } catch (error) {
+            console.error(`Error fetching ${integrationId} status:`, error);
+            return { id: integrationId, connected: false };
+          }
+        }
+      );
+
+      const statuses = await Promise.all(statusPromises);
+
+      // Update integrations with fetched statuses
+      setIntegrations(prevIntegrations =>
+        prevIntegrations.map(integration => {
+          // Skip Stripe - it's hardcoded as connected
+          if (integration.id === 'stripe') {
+            return integration;
+          }
+
+          const status = statuses.find(s => s.id === integration.id);
+          if (status) {
+            return { ...integration, connected: status.connected };
+          }
+          return integration;
+        })
+      );
+
+      setIsLoading(false);
+    }
+
+    fetchIntegrationStatuses();
+  }, []);
+
   const connectedCount = integrations.filter((i) => i.connected).length;
   const categories = Array.from(new Set(integrations.map((i) => i.category)));
 
@@ -207,7 +267,14 @@ export default function IntegrationsPage() {
           </p>
         </div>
         <Badge variant="secondary" className="text-sm">
-          {connectedCount} connected
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              Loading...
+            </>
+          ) : (
+            `${connectedCount} connected`
+          )}
         </Badge>
       </div>
 
@@ -217,10 +284,16 @@ export default function IntegrationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
-                <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 text-green-600 dark:text-green-400 animate-spin" />
+                ) : (
+                  <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
+                )}
               </div>
               <div>
-                <p className="text-2xl font-bold">{connectedCount}</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? "-" : connectedCount}
+                </p>
                 <p className="text-sm text-muted-foreground">Connected</p>
               </div>
             </div>
@@ -230,11 +303,15 @@ export default function IntegrationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                <Link2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-spin" />
+                ) : (
+                  <Link2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                )}
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {integrations.filter((i) => i.available && !i.connected).length}
+                  {isLoading ? "-" : integrations.filter((i) => i.available && !i.connected).length}
                 </p>
                 <p className="text-sm text-muted-foreground">Available</p>
               </div>
@@ -245,11 +322,15 @@ export default function IntegrationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/20">
-                <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 text-amber-600 dark:text-amber-400 animate-spin" />
+                ) : (
+                  <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                )}
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {integrations.filter((i) => i.comingSoon).length}
+                  {isLoading ? "-" : integrations.filter((i) => i.comingSoon).length}
                 </p>
                 <p className="text-sm text-muted-foreground">Coming Soon</p>
               </div>
