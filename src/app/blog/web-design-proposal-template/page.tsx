@@ -23,7 +23,7 @@ export default function WebDesignProposalTemplatePage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -909,7 +909,7 @@ export default function WebDesignProposalTemplatePage() {
                 Stop losing projects to agencies with slicker proposals.
               </p>
               <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-                <strong>SendProp</strong> helps designers:
+                <strong>OpenProposal</strong> helps designers:
               </p>
               <ul className="text-left max-w-md mx-auto mb-8 space-y-2">
                 <li className="flex items-center gap-2">
@@ -935,7 +935,7 @@ export default function WebDesignProposalTemplatePage() {
               </ul>
               <Button size="lg" variant="secondary" asChild>
                 <Link href="https://sendprop.com">
-                  Try SendProp Free
+                  Try OpenProposal Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -954,7 +954,7 @@ export default function WebDesignProposalTemplatePage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

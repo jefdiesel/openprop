@@ -142,7 +142,7 @@ export default function FreelanceProposalTemplatePage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -652,7 +652,7 @@ export default function FreelanceProposalTemplatePage() {
                 <CardContent>
                   <ul className="space-y-2 text-sm">
                     <li>
-                      <strong>SendProp</strong> - Proposals + e-signatures + payments in one
+                      <strong>OpenProposal</strong> - Proposals + e-signatures + payments in one
                     </li>
                     <li>
                       <strong>Proposify</strong> - Template-heavy
@@ -703,7 +703,7 @@ export default function FreelanceProposalTemplatePage() {
                   Create Freelance Proposals That Close
                 </h2>
                 <p className="text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-                  Stop losing clients to sloppy proposals. SendProp gives you professional
+                  Stop losing clients to sloppy proposals. OpenProposal gives you professional
                   templates, e-signatures, Stripe payment collection, open/view tracking, and no
                   per-user pricing.
                 </p>
@@ -786,7 +786,7 @@ export default function FreelanceProposalTemplatePage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

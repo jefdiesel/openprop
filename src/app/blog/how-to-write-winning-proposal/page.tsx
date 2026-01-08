@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "How to Write a Winning Business Proposal [Step-by-Step Guide] | SendProp",
+  title: "How to Write a Winning Business Proposal [Step-by-Step Guide] | OpenProposal",
   description:
     "Learn the exact structure, psychology, and tactics that turn proposals into signed contracts. Data-driven guide from thousands of successful proposals.",
   openGraph: {
@@ -23,7 +23,7 @@ export default function WinningProposalGuidePage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -641,7 +641,7 @@ export default function WinningProposalGuidePage() {
                 </CardHeader>
                 <CardContent>
                   <ul className="list-disc pl-6 space-y-2 text-sm">
-                    <li><strong>SendProp</strong> - proposals + e-signatures + payments</li>
+                    <li><strong>OpenProposal</strong> - proposals + e-signatures + payments</li>
                     <li>Proposify</li>
                     <li>PandaDoc</li>
                     <li>Better Proposals</li>
@@ -781,11 +781,11 @@ export default function WinningProposalGuidePage() {
                 Stop losing deals to inferior competitors with better proposals.
               </p>
               <p className="text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-                <strong>SendProp</strong> helps you create professional proposals in minutes, get e-signatures instantly, collect payment upon signing, track opens and engagement, and win more clients.
+                <strong>OpenProposal</strong> helps you create professional proposals in minutes, get e-signatures instantly, collect payment upon signing, track opens and engagement, and win more clients.
               </p>
               <Button size="lg" variant="secondary" asChild>
                 <Link href="https://sendprop.com">
-                  Try SendProp Free
+                  Try OpenProposal Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -797,7 +797,7 @@ export default function WinningProposalGuidePage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
           <p className="mt-2">Last updated: January 2026</p>
         </div>
       </footer>

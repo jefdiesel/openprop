@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "15 Reasons Your Proposals Get Rejected (And How to Fix Them) - SendProp",
+  title: "15 Reasons Your Proposals Get Rejected (And How to Fix Them) - OpenProposal",
   description:
     "Stop losing deals you should be winning. These common proposal mistakes cost freelancers and agencies thousands every year. Learn how to fix them.",
   openGraph: {
@@ -60,7 +60,7 @@ export default function WhyProposalsGetRejectedPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -917,7 +917,7 @@ export default function WhyProposalsGetRejectedPage() {
                   better skills.
                 </p>
                 <p className="text-lg mb-6 text-primary-foreground/90">
-                  <strong>SendProp</strong> helps you:
+                  <strong>OpenProposal</strong> helps you:
                 </p>
                 <ul className="space-y-2 mb-8">
                   <li className="flex items-start text-primary-foreground/90">
@@ -943,7 +943,7 @@ export default function WhyProposalsGetRejectedPage() {
                 </ul>
                 <Button size="lg" variant="secondary" asChild>
                   <Link href="https://sendprop.com">
-                    Try SendProp Free
+                    Try OpenProposal Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -961,7 +961,7 @@ export default function WhyProposalsGetRejectedPage() {
       {/* Footer */}
       <footer className="border-t py-8 mt-16">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

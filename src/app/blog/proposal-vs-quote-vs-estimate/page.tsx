@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Proposal vs Quote vs Estimate: What's the Difference? | SendProp",
+  title: "Proposal vs Quote vs Estimate: What's the Difference? | OpenProposal",
   description:
     "Learn when to use proposals, quotes, and estimates. Understand what to include in each, how they impact your close rate, and which format wins more deals.",
   openGraph: {
@@ -23,7 +23,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -669,7 +669,7 @@ ________________________`}
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      <li><strong>SendProp</strong> - Full proposal + e-signature + payment</li>
+                      <li><strong>OpenProposal</strong> - Full proposal + e-signature + payment</li>
                       <li>PandaDoc</li>
                       <li>Proposify</li>
                       <li>Google Docs/Canva (manual signatures)</li>
@@ -741,7 +741,7 @@ ________________________`}
                   </p>
                   <div className="space-y-4">
                     <p className="text-primary-foreground/80">
-                      <strong>SendProp</strong> makes it easy:
+                      <strong>OpenProposal</strong> makes it easy:
                     </p>
                     <ul className="space-y-2 text-left max-w-md mx-auto text-primary-foreground/90">
                       <li>✓ Create proposals in minutes (not hours)</li>
@@ -753,7 +753,7 @@ ________________________`}
                     <div className="pt-4">
                       <Button size="lg" variant="secondary" asChild>
                         <Link href="https://sendprop.com">
-                          Try SendProp Free
+                          Try OpenProposal Free
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
@@ -805,7 +805,7 @@ ________________________`}
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

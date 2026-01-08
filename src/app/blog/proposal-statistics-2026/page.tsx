@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "47 Proposal Statistics You Need to Know [2026 Data] - SendProp",
+  title: "47 Proposal Statistics You Need to Know [2026 Data] - OpenProposal",
   description:
     "The latest data on proposal win rates, response times, and what separates top performers from the rest. Benchmark your proposal process with 2026 industry statistics.",
   openGraph: {
@@ -31,7 +31,7 @@ export default function ProposalStatistics2026Page() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -995,12 +995,12 @@ export default function ProposalStatistics2026Page() {
                   Join the 69% of top performers using proposal software.
                 </p>
                 <p className="text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-                  <strong>SendProp</strong> helps you send proposals faster, track when they&apos;re opened,
+                  <strong>OpenProposal</strong> helps you send proposals faster, track when they&apos;re opened,
                   get e-signatures instantly, collect payment on signing, and win more deals.
                 </p>
                 <Button size="lg" variant="secondary" asChild>
                   <Link href="https://sendprop.com">
-                    Try SendProp Free
+                    Try OpenProposal Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -1023,7 +1023,7 @@ export default function ProposalStatistics2026Page() {
       {/* Footer */}
       <footer className="border-t py-8 mt-12">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

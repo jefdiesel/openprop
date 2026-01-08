@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "The SendProp Blog - Resources for Winning More Business",
+  title: "The OpenProposal Blog - Resources for Winning More Business",
   description:
     "Learn how to write winning proposals, close more deals, and grow your business with our comprehensive guides and templates.",
   openGraph: {
-    title: "The SendProp Blog - Resources for Winning More Business",
+    title: "The OpenProposal Blog - Resources for Winning More Business",
     description:
       "Learn how to write winning proposals, close more deals, and grow your business with our comprehensive guides and templates.",
   },
@@ -85,7 +85,7 @@ export default function BlogPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -104,7 +104,7 @@ export default function BlogPage() {
           <div className="flex items-center justify-center gap-2 mb-6">
             <BookOpen className="h-8 w-8 text-primary" />
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              The SendProp Blog
+              The OpenProposal Blog
             </h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -138,7 +138,7 @@ export default function BlogPage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "How to Get Clients to Pay Faster: 12 Proven Strategies - SendProp",
+  title: "How to Get Clients to Pay Faster: 12 Proven Strategies - OpenProposal",
   description:
     "Stop chasing invoices. These tactics help freelancers and agencies get paid on time—or even upfront. Learn proven strategies to improve cash flow.",
   openGraph: {
@@ -23,7 +23,7 @@ export default function HowToGetClientToPayFasterPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -466,7 +466,7 @@ export default function HowToGetClientToPayFasterPage() {
               <p className="mb-6">No separate invoice. No waiting. No chasing.</p>
 
               <p className="text-lg">
-                Tools like <strong>SendProp</strong> combine proposals, e-signatures, and Stripe payments in one workflow. The client never leaves the document.
+                Tools like <strong>OpenProposal</strong> combine proposals, e-signatures, and Stripe payments in one workflow. The client never leaves the document.
               </p>
             </section>
 
@@ -546,7 +546,7 @@ export default function HowToGetClientToPayFasterPage() {
 
               <Card className="mb-8">
                 <CardHeader>
-                  <CardTitle className="text-xl">SendProp makes this seamless:</CardTitle>
+                  <CardTitle className="text-xl">OpenProposal makes this seamless:</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div>✓ Professional proposals</div>
@@ -629,11 +629,11 @@ export default function HowToGetClientToPayFasterPage() {
                 Ready to get paid faster?
               </h2>
               <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-                SendProp combines proposals, e-signatures, and payments in one simple workflow.
+                OpenProposal combines proposals, e-signatures, and payments in one simple workflow.
                 Get paid at the moment clients say yes.
               </p>
               <Button size="lg" variant="secondary" asChild>
-                <Link href="/login">Try SendProp Free</Link>
+                <Link href="/login">Try OpenProposal Free</Link>
               </Button>
             </CardContent>
           </Card>
@@ -643,7 +643,7 @@ export default function HowToGetClientToPayFasterPage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>

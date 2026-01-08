@@ -23,7 +23,7 @@ export default function BusinessProposalTemplatePage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -643,7 +643,7 @@ export default function BusinessProposalTemplatePage() {
                     Stop spending hours formatting proposals in Word.
                   </p>
                   <div className="mb-6">
-                    <p className="text-primary-foreground/90 mb-2"><strong>SendProp</strong> lets you:</p>
+                    <p className="text-primary-foreground/90 mb-2"><strong>OpenProposal</strong> lets you:</p>
                     <ul className="text-left inline-block text-primary-foreground/90 space-y-2">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5" />
@@ -672,7 +672,7 @@ export default function BusinessProposalTemplatePage() {
                   </p>
                   <Button size="lg" variant="secondary" asChild>
                     <Link href="https://sendprop.com">
-                      Try SendProp Free
+                      Try OpenProposal Free
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -748,7 +748,7 @@ export default function BusinessProposalTemplatePage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
     </div>
