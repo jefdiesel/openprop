@@ -39,17 +39,21 @@ export async function POST(request: NextRequest) {
       if (FORWARD_TO) {
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
+          replyTo: from,
           to: FORWARD_TO,
-          subject: `[Fwd] ${subject}`,
+          subject: `${subject}`,
           html: `
-            <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; margin-bottom: 16px;">
-              <p><strong>From:</strong> ${from}</p>
-              <p><strong>To:</strong> ${to.join(', ')}</p>
-              <p><strong>Subject:</strong> ${subject}</p>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="border-bottom: 1px solid #e5e5e5; padding-bottom: 12px; margin-bottom: 16px; font-size: 13px; color: #666;">
+                <span style="color: #999;">From:</span> ${from}<br/>
+                <span style="color: #999;">To:</span> ${to.join(', ')}
+              </div>
+              <div style="color: #1a1a1a; line-height: 1.6;">
+                ${emailContent.html || emailContent.text?.replace(/\n/g, '<br/>') || ''}
+              </div>
             </div>
-            <hr />
-            ${emailContent.html || emailContent.text || 'No content'}
           `,
+          text: `From: ${from}\nTo: ${to.join(', ')}\n\n${emailContent.text || ''}`,
         });
       }
 
