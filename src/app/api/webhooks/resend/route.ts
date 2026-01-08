@@ -33,24 +33,23 @@ export async function POST(request: NextRequest) {
       let html = '';
       let text = '';
 
+      let apiDebug = '';
       if (emailId) {
         try {
-          console.log('Fetching email content for ID:', emailId);
           const result = await resend.emails.receiving.get(emailId);
-          console.log('Receiving API response:', JSON.stringify(result, null, 2));
+          apiDebug = JSON.stringify(result, null, 2);
 
           if (result.error) {
-            console.error('Receiving API error:', result.error);
+            apiDebug = `ERROR: ${JSON.stringify(result.error)}`;
           } else if (result.data) {
             html = result.data.html || '';
             text = result.data.text || '';
-            console.log('Got content - html:', html.substring(0, 100), 'text:', text.substring(0, 100));
           }
         } catch (fetchError) {
-          console.error('Failed to fetch email content:', fetchError);
+          apiDebug = `EXCEPTION: ${fetchError}`;
         }
       } else {
-        console.warn('No email_id in webhook payload');
+        apiDebug = 'No email_id in webhook';
       }
 
       // Forward to your email
@@ -62,6 +61,7 @@ export async function POST(request: NextRequest) {
         const debugInfo = `
           <div style="background: #f5f5f5; padding: 10px; margin-top: 20px; font-size: 11px; color: #666; border-radius: 4px;">
             <strong>Debug:</strong> email_id=${emailId || 'none'}, html_len=${html.length}, text_len=${text.length}
+            <pre style="white-space: pre-wrap; word-break: break-all; margin-top: 8px; font-size: 10px;">${apiDebug.substring(0, 2000)}</pre>
           </div>
         `;
 
