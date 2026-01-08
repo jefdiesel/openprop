@@ -6,13 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "SendProp vs Better Proposals - More Features, Better Value",
+  title: "OpenProposal vs Better Proposals - More Features, Better Value",
   description:
-    "Compare SendProp to Better Proposals. Get more generous free tier, better support hours, modern API, and all the features you need at a better price.",
+    "Compare OpenProposal to Better Proposals. Get more generous free tier, better support hours, modern API, and all the features you need at a better price.",
   openGraph: {
-    title: "SendProp vs Better Proposals - More Features, Better Value",
+    title: "OpenProposal vs Better Proposals - More Features, Better Value",
     description:
-      "Compare SendProp to Better Proposals. More generous free tier, US-based support, modern tech stack.",
+      "Compare OpenProposal to Better Proposals. More generous free tier, US-based support, modern tech stack.",
   },
 };
 
@@ -20,43 +20,43 @@ const comparisonData = [
   {
     category: "Pricing",
     items: [
-      { feature: "Free plan available", sendprop: true, betterproposals: "Very limited" },
-      { feature: "Starter plan price", sendprop: "$0/mo (3 docs)", betterproposals: "~$19/mo" },
-      { feature: "Team plan price", sendprop: "$29/mo flat", betterproposals: "~$29/mo" },
-      { feature: "Business plan price", sendprop: "$99/mo flat", betterproposals: "Custom" },
-      { feature: "Free tier documents", sendprop: "3 per month", betterproposals: "Limited trial" },
-      { feature: "Early bird discount", sendprop: "Up to 50% off", betterproposals: false },
+      { feature: "Free plan available", openproposal: true, betterproposals: "Very limited" },
+      { feature: "Starter plan price", openproposal: "$0/mo (3 docs)", betterproposals: "~$19/mo" },
+      { feature: "Team plan price", openproposal: "$29/mo flat", betterproposals: "~$29/mo" },
+      { feature: "Business plan price", openproposal: "$99/mo flat", betterproposals: "Custom" },
+      { feature: "Free tier documents", openproposal: "3 per month", betterproposals: "Limited trial" },
+      { feature: "Early bird discount", openproposal: "Up to 50% off", betterproposals: false },
     ],
   },
   {
     category: "Document Creation",
     items: [
-      { feature: "Beautiful templates", sendprop: true, betterproposals: true },
-      { feature: "Drag-and-drop builder", sendprop: true, betterproposals: true },
-      { feature: "Custom branding", sendprop: true, betterproposals: true },
-      { feature: "Content blocks", sendprop: true, betterproposals: true },
-      { feature: "Variables/merge fields", sendprop: true, betterproposals: true },
+      { feature: "Beautiful templates", openproposal: true, betterproposals: true },
+      { feature: "Drag-and-drop builder", openproposal: true, betterproposals: true },
+      { feature: "Custom branding", openproposal: true, betterproposals: true },
+      { feature: "Content blocks", openproposal: true, betterproposals: true },
+      { feature: "Variables/merge fields", openproposal: true, betterproposals: true },
     ],
   },
   {
     category: "Signatures & Payments",
     items: [
-      { feature: "E-signatures", sendprop: true, betterproposals: true },
-      { feature: "Payment integration", sendprop: true, betterproposals: true },
-      { feature: "Stripe integration", sendprop: true, betterproposals: true },
-      { feature: "Partial payments", sendprop: true, betterproposals: "Limited" },
-      { feature: "Blockchain verification", sendprop: true, betterproposals: false },
+      { feature: "E-signatures", openproposal: true, betterproposals: true },
+      { feature: "Payment integration", openproposal: true, betterproposals: true },
+      { feature: "Stripe integration", openproposal: true, betterproposals: true },
+      { feature: "Partial payments", openproposal: true, betterproposals: "Limited" },
+      { feature: "Blockchain verification", openproposal: true, betterproposals: false },
     ],
   },
   {
     category: "Workflow & Integrations",
     items: [
-      { feature: "Document tracking", sendprop: true, betterproposals: true },
-      { feature: "Automatic reminders", sendprop: true, betterproposals: true },
-      { feature: "Team collaboration", sendprop: true, betterproposals: true },
-      { feature: "CRM integrations", sendprop: "HubSpot, Salesforce", betterproposals: "Limited" },
-      { feature: "Developer API", sendprop: "Modern REST API", betterproposals: "Basic" },
-      { feature: "Support hours", sendprop: "US-based (9-5 EST)", betterproposals: "UK-based" },
+      { feature: "Document tracking", openproposal: true, betterproposals: true },
+      { feature: "Automatic reminders", openproposal: true, betterproposals: true },
+      { feature: "Team collaboration", openproposal: true, betterproposals: true },
+      { feature: "CRM integrations", openproposal: "HubSpot, Salesforce", betterproposals: "Limited" },
+      { feature: "Developer API", openproposal: "Modern REST API", betterproposals: "Basic" },
+      { feature: "Support hours", openproposal: "US-based (9-5 EST)", betterproposals: "UK-based" },
     ],
   },
 ];
@@ -65,22 +65,22 @@ const switchReasons = [
   {
     title: "More generous free tier",
     description:
-      "Better Proposals has a very limited free tier. SendProp gives you 3 full-featured documents per month, perfect for freelancers and small businesses just getting started.",
+      "Better Proposals has a very limited free tier. OpenProposal gives you 3 full-featured documents per month, perfect for freelancers and small businesses just getting started.",
   },
   {
     title: "US-based support with better hours",
     description:
-      "Better Proposals is UK-based, which can mean delayed support for US customers. SendProp offers US-based support during standard US business hours (9-5 EST).",
+      "Better Proposals is UK-based, which can mean delayed support for US customers. OpenProposal offers US-based support during standard US business hours (9-5 EST).",
   },
   {
     title: "Modern developer API",
     description:
-      "SendProp is built with a modern tech stack and offers a comprehensive REST API for integrations and automation. Better for developers and custom workflows.",
+      "OpenProposal is built with a modern tech stack and offers a comprehensive REST API for integrations and automation. Better for developers and custom workflows.",
   },
   {
     title: "Early bird pricing advantage",
     description:
-      "Get SendProp Team for just $15/month (50% off) or Business for $50/month (50% off) with early bird pricing. Better value as you scale.",
+      "Get OpenProposal Team for just $15/month (50% off) or Business for $50/month (50% off) with early bird pricing. Better value as you scale.",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function BetterProposalsComparisonPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -119,7 +119,7 @@ export default function BetterProposalsComparisonPage() {
         {/* Hero */}
         <section className="container mx-auto px-6 py-12 md:py-16">
           <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="text-4xl font-bold">SendProp</div>
+            <div className="text-4xl font-bold">OpenProposal</div>
             <Badge variant="secondary" className="text-lg px-3 py-1">
               vs
             </Badge>
@@ -129,14 +129,14 @@ export default function BetterProposalsComparisonPage() {
             Beautiful proposals with better value
           </h1>
           <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-8">
-            Love Better Proposals&apos; beautiful templates? SendProp gives you the same gorgeous
+            Love Better Proposals&apos; beautiful templates? OpenProposal gives you the same gorgeous
             designs with a more generous free tier, US-based support, and modern developer tools.
             Perfect for growing teams.
           </p>
           <div className="flex justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/login">
-                Try SendProp Free
+                Try OpenProposal Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -150,7 +150,7 @@ export default function BetterProposalsComparisonPage() {
               <CardHeader className="text-center">
                 <CardTitle>Annual Cost Comparison</CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
-                  See how SendProp delivers better value for growing teams
+                  See how OpenProposal delivers better value for growing teams
                 </p>
               </CardHeader>
               <CardContent>
@@ -163,7 +163,7 @@ export default function BetterProposalsComparisonPage() {
                     <div className="text-xl font-semibold mt-3 text-red-600">$348/year</div>
                   </div>
                   <div className="border-l pl-8">
-                    <div className="text-sm text-muted-foreground mb-2">SendProp Team</div>
+                    <div className="text-sm text-muted-foreground mb-2">OpenProposal Team</div>
                     <div className="text-2xl font-bold text-green-600">$29/mo flat</div>
                     <div className="text-lg text-muted-foreground mt-1">up to 10 users</div>
                     <div className="text-sm text-muted-foreground mt-2">full integrations + API</div>
@@ -223,7 +223,7 @@ export default function BetterProposalsComparisonPage() {
                       <tr className="border-b bg-muted/50">
                         <th className="text-left py-3 px-4 font-medium">Feature</th>
                         <th className="text-center py-3 px-4 font-medium w-32 bg-primary/5">
-                          SendProp
+                          OpenProposal
                         </th>
                         <th className="text-center py-3 px-4 font-medium w-32">Better Proposals</th>
                       </tr>
@@ -233,14 +233,14 @@ export default function BetterProposalsComparisonPage() {
                         <tr key={i} className="border-b last:border-0">
                           <td className="py-3 px-4">{row.feature}</td>
                           <td className="text-center py-3 px-4 bg-primary/5">
-                            {typeof row.sendprop === "boolean" ? (
-                              row.sendprop ? (
+                            {typeof row.openproposal === "boolean" ? (
+                              row.openproposal ? (
                                 <Check className="h-5 w-5 text-green-600 mx-auto" />
                               ) : (
                                 <X className="h-5 w-5 text-red-500 mx-auto" />
                               )
                             ) : (
-                              <span className="font-medium text-green-600">{row.sendprop}</span>
+                              <span className="font-medium text-green-600">{row.openproposal}</span>
                             )}
                           </td>
                           <td className="text-center py-3 px-4">
@@ -277,14 +277,14 @@ export default function BetterProposalsComparisonPage() {
                 Europe and need simple proposal features without complex integrations.
               </p>
               <p>
-                <strong>SendProp</strong> offers the same beautiful templates and core features, but
+                <strong>OpenProposal</strong> offers the same beautiful templates and core features, but
                 with a more generous free tier (3 docs/month vs limited trial), US-based support with
                 better hours for American customers, and a modern developer API. If you&apos;re looking
-                for better value, team collaboration, and room to grow, SendProp is the smarter choice.
+                for better value, team collaboration, and room to grow, OpenProposal is the smarter choice.
               </p>
               <div className="pt-4">
                 <Button asChild>
-                  <Link href="/login">Try SendProp Free - No Credit Card Required</Link>
+                  <Link href="/login">Try OpenProposal Free - No Credit Card Required</Link>
                 </Button>
               </div>
             </CardContent>
@@ -330,9 +330,9 @@ export default function BetterProposalsComparisonPage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
           <p className="mt-2">
-            Better Proposals is a registered trademark of Better Proposals Ltd. SendProp is not affiliated with
+            Better Proposals is a registered trademark of Better Proposals Ltd. OpenProposal is not affiliated with
             Better Proposals.
           </p>
         </div>

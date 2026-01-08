@@ -6,13 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "SendProp vs PandaDoc - The Affordable Alternative",
+  title: "OpenProposal vs PandaDoc - The Affordable Alternative",
   description:
-    "Compare SendProp to PandaDoc. Get the same great proposal features with built-in payments at half the price. No expensive add-ons required.",
+    "Compare OpenProposal to PandaDoc. Get the same great proposal features with built-in payments at half the price. No expensive add-ons required.",
   openGraph: {
-    title: "SendProp vs PandaDoc - The Affordable Alternative",
+    title: "OpenProposal vs PandaDoc - The Affordable Alternative",
     description:
-      "Compare SendProp to PandaDoc. Same features, lower price, payments included.",
+      "Compare OpenProposal to PandaDoc. Same features, lower price, payments included.",
   },
 };
 
@@ -20,43 +20,43 @@ const comparisonData = [
   {
     category: "Pricing",
     items: [
-      { feature: "Free plan available", sendprop: true, pandadoc: true },
-      { feature: "Starter plan price", sendprop: "$0/mo (3 docs)", pandadoc: "$0/mo (limited)" },
-      { feature: "Team plan price", sendprop: "$29/mo flat", pandadoc: "$35/mo per user" },
-      { feature: "Business plan price", sendprop: "$99/mo flat", pandadoc: "$65/mo per user" },
-      { feature: "Per-user pricing", sendprop: false, pandadoc: true },
-      { feature: "Payment collection", sendprop: "Included", pandadoc: "Add-on cost" },
-      { feature: "Early bird discount", sendprop: "Up to 50% off", pandadoc: "~10% annual" },
+      { feature: "Free plan available", openproposal: true, pandadoc: true },
+      { feature: "Starter plan price", openproposal: "$0/mo (3 docs)", pandadoc: "$0/mo (limited)" },
+      { feature: "Team plan price", openproposal: "$29/mo flat", pandadoc: "$35/mo per user" },
+      { feature: "Business plan price", openproposal: "$99/mo flat", pandadoc: "$65/mo per user" },
+      { feature: "Per-user pricing", openproposal: false, pandadoc: true },
+      { feature: "Payment collection", openproposal: "Included", pandadoc: "Add-on cost" },
+      { feature: "Early bird discount", openproposal: "Up to 50% off", pandadoc: "~10% annual" },
     ],
   },
   {
     category: "Document Creation",
     items: [
-      { feature: "Drag-and-drop builder", sendprop: true, pandadoc: true },
-      { feature: "Template library", sendprop: true, pandadoc: true },
-      { feature: "Custom branding", sendprop: true, pandadoc: true },
-      { feature: "Content blocks", sendprop: true, pandadoc: true },
-      { feature: "Variables/merge fields", sendprop: true, pandadoc: true },
+      { feature: "Drag-and-drop builder", openproposal: true, pandadoc: true },
+      { feature: "Template library", openproposal: true, pandadoc: true },
+      { feature: "Custom branding", openproposal: true, pandadoc: true },
+      { feature: "Content blocks", openproposal: true, pandadoc: true },
+      { feature: "Variables/merge fields", openproposal: true, pandadoc: true },
     ],
   },
   {
     category: "Signatures & Payments",
     items: [
-      { feature: "E-signatures", sendprop: true, pandadoc: true },
-      { feature: "Payment collection", sendprop: true, pandadoc: "Add-on" },
-      { feature: "Stripe integration", sendprop: true, pandadoc: true },
-      { feature: "Partial payments", sendprop: true, pandadoc: "Add-on" },
-      { feature: "Blockchain verification", sendprop: true, pandadoc: false },
+      { feature: "E-signatures", openproposal: true, pandadoc: true },
+      { feature: "Payment collection", openproposal: true, pandadoc: "Add-on" },
+      { feature: "Stripe integration", openproposal: true, pandadoc: true },
+      { feature: "Partial payments", openproposal: true, pandadoc: "Add-on" },
+      { feature: "Blockchain verification", openproposal: true, pandadoc: false },
     ],
   },
   {
     category: "Workflow",
     items: [
-      { feature: "Document tracking", sendprop: true, pandadoc: true },
-      { feature: "Automatic reminders", sendprop: true, pandadoc: true },
-      { feature: "Team collaboration", sendprop: true, pandadoc: true },
-      { feature: "CRM integrations", sendprop: "HubSpot, Salesforce", pandadoc: "Many" },
-      { feature: "API access", sendprop: true, pandadoc: true },
+      { feature: "Document tracking", openproposal: true, pandadoc: true },
+      { feature: "Automatic reminders", openproposal: true, pandadoc: true },
+      { feature: "Team collaboration", openproposal: true, pandadoc: true },
+      { feature: "CRM integrations", openproposal: "HubSpot, Salesforce", pandadoc: "Many" },
+      { feature: "API access", openproposal: true, pandadoc: true },
     ],
   },
 ];
@@ -65,22 +65,22 @@ const switchReasons = [
   {
     title: "Flat-rate pricing, not per-user",
     description:
-      "PandaDoc charges $35-65/month per user. SendProp is $29-99/month flat for unlimited team members (Team: up to 10, Business: unlimited).",
+      "PandaDoc charges $35-65/month per user. OpenProposal is $29-99/month flat for unlimited team members (Team: up to 10, Business: unlimited).",
   },
   {
     title: "Payments included",
     description:
-      "PandaDoc charges extra for payment collection. SendProp includes it in every paid plan at no additional cost.",
+      "PandaDoc charges extra for payment collection. OpenProposal includes it in every paid plan at no additional cost.",
   },
   {
     title: "Early bird pricing",
     description:
-      "Get SendProp Team for just $15/month (50% off) or Business for $50/month (50% off) with early bird pricing.",
+      "Get OpenProposal Team for just $15/month (50% off) or Business for $50/month (50% off) with early bird pricing.",
   },
   {
     title: "Simpler, faster",
     description:
-      "PandaDoc has powerful features but can feel overwhelming. SendProp keeps things simple and focused on what matters most.",
+      "PandaDoc has powerful features but can feel overwhelming. OpenProposal keeps things simple and focused on what matters most.",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function PandaDocComparisonPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 flex h-16 items-center justify-between">
           <Link href="/" className="font-bold text-xl">
-            SendProp
+            OpenProposal
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
@@ -119,7 +119,7 @@ export default function PandaDocComparisonPage() {
         {/* Hero */}
         <section className="container mx-auto px-6 py-12 md:py-16">
           <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="text-4xl font-bold">SendProp</div>
+            <div className="text-4xl font-bold">OpenProposal</div>
             <Badge variant="secondary" className="text-lg px-3 py-1">
               vs
             </Badge>
@@ -129,13 +129,13 @@ export default function PandaDocComparisonPage() {
             All the proposal power, flat-rate pricing
           </h1>
           <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-8">
-            Love PandaDoc&apos;s features but not the per-user pricing? SendProp gives you drag-and-drop
+            Love PandaDoc&apos;s features but not the per-user pricing? OpenProposal gives you drag-and-drop
             proposals, e-signatures, and payments with flat-rate team pricing. No per-user charges.
           </p>
           <div className="flex justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/login">
-                Try SendProp Free
+                Try OpenProposal Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -162,7 +162,7 @@ export default function PandaDocComparisonPage() {
                     <div className="text-xl font-semibold mt-3 text-red-600">$3,900/year</div>
                   </div>
                   <div className="border-l pl-8">
-                    <div className="text-sm text-muted-foreground mb-2">SendProp Business</div>
+                    <div className="text-sm text-muted-foreground mb-2">OpenProposal Business</div>
                     <div className="text-2xl font-bold text-green-600">$99/mo flat</div>
                     <div className="text-lg text-muted-foreground mt-1">unlimited team</div>
                     <div className="text-sm text-muted-foreground mt-2">payments included</div>
@@ -222,7 +222,7 @@ export default function PandaDocComparisonPage() {
                       <tr className="border-b bg-muted/50">
                         <th className="text-left py-3 px-4 font-medium">Feature</th>
                         <th className="text-center py-3 px-4 font-medium w-32 bg-primary/5">
-                          SendProp
+                          OpenProposal
                         </th>
                         <th className="text-center py-3 px-4 font-medium w-32">PandaDoc</th>
                       </tr>
@@ -232,14 +232,14 @@ export default function PandaDocComparisonPage() {
                         <tr key={i} className="border-b last:border-0">
                           <td className="py-3 px-4">{row.feature}</td>
                           <td className="text-center py-3 px-4 bg-primary/5">
-                            {typeof row.sendprop === "boolean" ? (
-                              row.sendprop ? (
+                            {typeof row.openproposal === "boolean" ? (
+                              row.openproposal ? (
                                 <Check className="h-5 w-5 text-green-600 mx-auto" />
                               ) : (
                                 <X className="h-5 w-5 text-red-500 mx-auto" />
                               )
                             ) : (
-                              <span className="font-medium text-green-600">{row.sendprop}</span>
+                              <span className="font-medium text-green-600">{row.openproposal}</span>
                             )}
                           </td>
                           <td className="text-center py-3 px-4">
@@ -276,14 +276,14 @@ export default function PandaDocComparisonPage() {
                 complex workflows and have the budget for add-ons.
               </p>
               <p>
-                <strong>SendProp</strong> offers the same core features - drag-and-drop proposals,
+                <strong>OpenProposal</strong> offers the same core features - drag-and-drop proposals,
                 e-signatures, and payment collection - at a significantly lower price point. If
                 you&apos;re a freelancer, agency, or small business looking to save without
-                sacrificing functionality, SendProp is your answer.
+                sacrificing functionality, OpenProposal is your answer.
               </p>
               <div className="pt-4">
                 <Button asChild>
-                  <Link href="/login">Try SendProp Free - No Credit Card Required</Link>
+                  <Link href="/login">Try OpenProposal Free - No Credit Card Required</Link>
                 </Button>
               </div>
             </CardContent>
@@ -329,9 +329,9 @@ export default function PandaDocComparisonPage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SendProp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
           <p className="mt-2">
-            PandaDoc is a registered trademark of PandaDoc, Inc. SendProp is not affiliated with
+            PandaDoc is a registered trademark of PandaDoc, Inc. OpenProposal is not affiliated with
             PandaDoc.
           </p>
         </div>

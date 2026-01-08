@@ -84,16 +84,16 @@ const pricingComparison = [
 ];
 
 const comparisonFeatures = [
-  { feature: "Starting price", sendprop: "$0/mo", docusign: "~$15/mo", pandadoc: "$0 (limited)" },
-  { feature: "Per-user fees", sendprop: "None - flat rate", docusign: "Yes ($45-65/user)", pandadoc: "Yes ($35-65/user)" },
-  { feature: "Team plan (10 users)", sendprop: "$29/mo total", docusign: "~$450/mo", pandadoc: "~$350/mo" },
-  { feature: "E-signatures included", sendprop: true, docusign: true, pandadoc: true },
-  { feature: "Drag-and-drop builder", sendprop: true, docusign: false, pandadoc: true },
-  { feature: "Variables/merge fields", sendprop: true, docusign: true, pandadoc: true },
-  { feature: "Payment collection", sendprop: true, docusign: false, pandadoc: "Add-on" },
-  { feature: "Blockchain verification", sendprop: true, docusign: false, pandadoc: false },
-  { feature: "Templates included", sendprop: true, docusign: true, pandadoc: true },
-  { feature: "Unlimited documents", sendprop: "Team & Business", docusign: false, pandadoc: "Business+" },
+  { feature: "Starting price", openproposal: "$0/mo", docusign: "~$15/mo", pandadoc: "$0 (limited)" },
+  { feature: "Per-user fees", openproposal: "None - flat rate", docusign: "Yes ($45-65/user)", pandadoc: "Yes ($35-65/user)" },
+  { feature: "Team plan (10 users)", openproposal: "$29/mo total", docusign: "~$450/mo", pandadoc: "~$350/mo" },
+  { feature: "E-signatures included", openproposal: true, docusign: true, pandadoc: true },
+  { feature: "Drag-and-drop builder", openproposal: true, docusign: false, pandadoc: true },
+  { feature: "Variables/merge fields", openproposal: true, docusign: true, pandadoc: true },
+  { feature: "Payment collection", openproposal: true, docusign: false, pandadoc: "Add-on" },
+  { feature: "Blockchain verification", openproposal: true, docusign: false, pandadoc: false },
+  { feature: "Templates included", openproposal: true, docusign: true, pandadoc: true },
+  { feature: "Unlimited documents", openproposal: "Team & Business", docusign: false, pandadoc: "Business+" },
 ];
 
 const whyOpenProposal = [
@@ -261,14 +261,14 @@ export default function ComparePage() {
                   <tr key={i} className="border-b">
                     <td className="py-4 px-4">{row.feature}</td>
                     <td className="text-center py-4 px-4 bg-primary/5">
-                      {typeof row.sendprop === "boolean" ? (
-                        row.sendprop ? (
+                      {typeof row.openproposal === "boolean" ? (
+                        row.openproposal ? (
                           <Check className="h-5 w-5 text-green-600 mx-auto" />
                         ) : (
                           <X className="h-5 w-5 text-red-500 mx-auto" />
                         )
                       ) : (
-                        <span className="font-medium text-green-600">{row.sendprop}</span>
+                        <span className="font-medium text-green-600">{row.openproposal}</span>
                       )}
                     </td>
                     <td className="text-center py-4 px-4">
