@@ -49,15 +49,11 @@ export default authMiddleware
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api/webhooks (external webhooks from Stripe, Resend, etc.)
-     * - api/cron (cron jobs)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api/webhooks|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Only run middleware on these specific paths
+    '/dashboard/:path*',
+    '/documents/:path*',
+    '/templates/:path*',
+    '/settings/:path*',
+    '/login',
   ],
 }
