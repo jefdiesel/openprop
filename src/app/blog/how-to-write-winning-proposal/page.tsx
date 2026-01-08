@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,21 +20,36 @@ export default function WinningProposalGuidePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="font-bold text-xl">
-            OpenProposal
+      <nav className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm dark:bg-zinc-950/80">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 sm:px-8">
+          <Link href="/" className="flex items-center gap-2">
+            <Send className="h-6 w-6" />
+            <span className="text-xl font-bold">OpenProposal</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
-              Sign in
+          <div className="hidden items-center gap-6 md:flex">
+            <Link href="/#features" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              Features
             </Link>
+            <Link href="/#pricing" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              Pricing
+            </Link>
+            <Link href="/compare" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              FAQ
+            </Link>
+            <Link href="/blog" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              Blog
+            </Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
             <Button asChild>
-              <Link href="/login">Get Started Free</Link>
+              <Link href="/login">Start Free</Link>
             </Button>
           </div>
         </div>
-      </header>
+      </nav>
 
       <main>
         {/* Hero */}
@@ -721,7 +736,7 @@ export default function WinningProposalGuidePage() {
             </Card>
 
             {/* FAQ */}
-            <h2 className="text-3xl font-bold mb-6 mt-12">FAQ</h2>
+            <h2 className="text-3xl font-bold mb-6 mt-12">Compare</h2>
             <div className="space-y-4 mb-12">
               <Card>
                 <CardHeader>
