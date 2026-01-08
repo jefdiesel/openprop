@@ -10,6 +10,7 @@ import {
   Settings,
   Zap,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,7 +98,8 @@ const baseIntegrations: Integration[] = [
     ),
     category: "crm",
     connected: false,
-    available: true,
+    available: false,
+    comingSoon: true,
     href: "/settings/integrations/hubspot",
   },
   {
@@ -122,7 +124,8 @@ const baseIntegrations: Integration[] = [
     ),
     category: "crm",
     connected: false,
-    available: true,
+    available: false,
+    comingSoon: true,
     href: "/settings/integrations/salesforce",
   },
   {
@@ -261,7 +264,7 @@ export default function IntegrationsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Integrations (Beta)</h1>
           <p className="text-muted-foreground">
             Connect SendProp with your favorite tools and services.
           </p>
@@ -277,6 +280,25 @@ export default function IntegrationsPage() {
           )}
         </Badge>
       </div>
+
+      {/* Beta Warning Banner */}
+      <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 dark:text-amber-100">
+                Integrations (Beta)
+              </h3>
+              <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                These integrations are currently in development. Some features may be limited or use sandbox/test environments.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
