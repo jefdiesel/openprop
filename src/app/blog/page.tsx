@@ -115,7 +115,7 @@ export default function BlogPage() {
 
       <main>
         {/* Hero */}
-        <section className="container py-16 md:py-24 text-center">
+        <section className="container mx-auto px-6 py-16 md:py-24 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <BookOpen className="h-8 w-8 text-primary" />
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -129,7 +129,7 @@ export default function BlogPage() {
         </section>
 
         {/* Blog Posts Grid */}
-        <section className="container pb-24">
+        <section className="container mx-auto px-6 pb-24">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {blogPosts.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`}>
@@ -152,7 +152,7 @@ export default function BlogPage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
