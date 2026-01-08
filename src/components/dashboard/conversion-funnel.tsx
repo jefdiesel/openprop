@@ -162,45 +162,27 @@ export function ConversionFunnel({ className }: ConversionFunnelProps) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Funnel visualization */}
-        <div className="space-y-4">
+      <CardContent className="space-y-3">
+        {/* Funnel visualization - compact single row per stage */}
+        <div className="space-y-2">
           {stages.map((stage, index) => {
             const Icon = stage.icon;
             const percentage = getPercentage(stage.count);
             const barWidth = getBarWidth(stage.count);
-            const conversionFromPrevious = getConversionFromPrevious(index);
 
             return (
-              <div key={stage.name} className="space-y-2">
-                {/* Stage header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <Icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium">{stage.name}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {index > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {conversionFromPrevious}% from previous
-                      </span>
-                    )}
-                    <span className="text-sm font-bold tabular-nums">
-                      {stage.count}
-                    </span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      ({percentage}%)
-                    </span>
-                  </div>
-                </div>
+              <div key={stage.name} className="flex items-center gap-3">
+                {/* Icon */}
+                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
 
-                {/* Horizontal bar */}
-                <div className="relative h-8 w-full overflow-hidden rounded-lg bg-muted">
+                {/* Label */}
+                <span className="w-20 shrink-0 text-sm">{stage.name}</span>
+
+                {/* Bar */}
+                <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
-                      "h-full rounded-lg transition-all duration-500",
+                      "h-full rounded-full transition-all duration-500",
                       index === 0 && "bg-blue-500",
                       index === 1 && "bg-indigo-500",
                       index === 2 && "bg-violet-500",
@@ -209,6 +191,11 @@ export function ConversionFunnel({ className }: ConversionFunnelProps) {
                     style={{ width: `${barWidth}%` }}
                   />
                 </div>
+
+                {/* Count & percentage */}
+                <span className="w-16 shrink-0 text-right text-sm tabular-nums">
+                  {stage.count} <span className="text-muted-foreground">({percentage}%)</span>
+                </span>
               </div>
             );
           })}
@@ -216,17 +203,13 @@ export function ConversionFunnel({ className }: ConversionFunnelProps) {
 
         {/* Additional metrics */}
         {data.avgTimeToComplete !== undefined && data.avgTimeToComplete > 0 && (
-          <div className="rounded-lg border bg-muted/50 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Average time to complete
-              </span>
-              <span className="text-sm font-semibold">
-                {data.avgTimeToComplete === 1
-                  ? "1 day"
-                  : `${data.avgTimeToComplete.toFixed(1)} days`}
-              </span>
-            </div>
+          <div className="flex items-center justify-between border-t pt-3 text-sm">
+            <span className="text-muted-foreground">Avg. time to complete</span>
+            <span className="font-medium">
+              {data.avgTimeToComplete === 1
+                ? "1 day"
+                : `${data.avgTimeToComplete.toFixed(1)} days`}
+            </span>
           </div>
         )}
       </CardContent>
