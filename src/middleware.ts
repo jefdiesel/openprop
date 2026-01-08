@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth"
-import { NextResponse, NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/documents', '/templates', '/settings']
@@ -7,22 +7,14 @@ const protectedRoutes = ['/dashboard', '/documents', '/templates', '/settings']
 // Routes that are always public
 const publicRoutes = ['/', '/login', '/sign', '/api/auth']
 
-// Bypass auth entirely for webhooks/cron
-function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
-
-  // Webhooks and cron bypass ALL middleware - return immediately
-  if (pathname.startsWith('/api/webhooks') || pathname.startsWith('/api/cron')) {
-    return NextResponse.next()
-  }
-
-  // For all other routes, use auth middleware
-  return authMiddleware(req)
-}
-
 // Auth-wrapped middleware for protected routes
 const authMiddleware = auth((req) => {
   const { pathname } = req.nextUrl
+
+  // Webhooks and cron bypass - return immediately
+  if (pathname.startsWith('/api/webhooks') || pathname.startsWith('/api/cron')) {
+    return NextResponse.next()
+  }
 
   // Check if the current path is a protected route
   const isProtectedRoute = protectedRoutes.some(
@@ -53,7 +45,7 @@ const authMiddleware = auth((req) => {
   return NextResponse.next()
 })
 
-export default middleware
+export default authMiddleware
 
 export const config = {
   matcher: [
