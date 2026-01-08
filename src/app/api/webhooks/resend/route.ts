@@ -23,12 +23,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (event.type === 'email.received') {
-      const { from, to, subject, html, text } = event.data;
+      // Log full payload to debug
+      console.log('Resend webhook payload:', JSON.stringify(event.data, null, 2));
 
-      // Forward to your email - content comes directly in webhook payload
+      const data = event.data;
+      const from = data.from || data.sender || '';
+      const to = data.to || data.recipients || [];
+      const subject = data.subject || '(no subject)';
+      // Try multiple possible field names for body
+      const html = data.html || data.body?.html || data.content?.html || '';
+      const text = data.text || data.body?.text || data.content?.text || data.body || '';
+
+      // Forward to your email
       if (FORWARD_TO) {
-        const bodyHtml = html || text?.replace(/\n/g, '<br/>') || '';
-        const bodyText = text || '';
+        const bodyHtml = html || text?.replace(/\n/g, '<br/>') || 'No content received';
+        const bodyText = text || 'No content received';
 
         await resend.emails.send({
           from: 'OpenProposal <noreply@sendprop.com>',
