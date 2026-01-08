@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Consulting Proposal Template: Land High-Ticket Clients [2026]",
+  title: "Consulting Proposal Template: Land High-Ticket Clients",
   description:
     "A proven consulting proposal template for engagements from $10K to $500K+. Includes strategy for positioning, pricing, and closing.",
   openGraph: {
-    title: "Consulting Proposal Template: Land High-Ticket Clients [2026]",
+    title: "Consulting Proposal Template: Land High-Ticket Clients",
     description:
       "A proven consulting proposal template for engagements from $10K to $500K+. Includes strategy for positioning, pricing, and closing.",
   },
@@ -66,7 +66,7 @@ export default function ConsultingProposalTemplatePage() {
           <div className="mb-8">
             <Badge variant="secondary" className="mb-4">Consulting</Badge>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-              Consulting Proposal Template: Land High-Ticket Clients [2026]
+              Consulting Proposal Template: Land High-Ticket Clients
             </h1>
             <p className="text-xl text-muted-foreground italic">
               A proven consulting proposal template for engagements from $10K to $500K+. Includes strategy for positioning, pricing, and closing.

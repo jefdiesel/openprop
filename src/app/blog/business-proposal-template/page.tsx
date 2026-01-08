@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Business Proposal Template: Free Download + Complete Guide [2026]",
+  title: "Business Proposal Template: Free Download + Complete Guide",
   description:
     "A professional business proposal template you can customize in minutes, plus everything you need to know to win more deals.",
   openGraph: {
-    title: "Business Proposal Template: Free Download + Complete Guide [2026]",
+    title: "Business Proposal Template: Free Download + Complete Guide",
     description:
       "A professional business proposal template you can customize in minutes, plus everything you need to know to win more deals.",
   },
@@ -68,7 +68,7 @@ export default function BusinessProposalTemplatePage() {
               Templates & Guides
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Business Proposal Template: Free Download + Complete Guide [2026]
+              Business Proposal Template: Free Download + Complete Guide
             </h1>
             <p className="text-xl text-muted-foreground mb-6">
               A professional business proposal template you can customize in minutes, plus everything you need to know to win more deals.

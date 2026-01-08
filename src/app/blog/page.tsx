@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const blogPosts = [
   {
     slug: "business-proposal-template",
-    title: "Business Proposal Template: Free Download + Complete Guide [2026]",
+    title: "Business Proposal Template: Free Download + Complete Guide",
     description:
       "Download our free business proposal template and learn how to create professional proposals that win clients. Includes step-by-step guide and examples.",
   },
@@ -30,7 +30,7 @@ const blogPosts = [
   },
   {
     slug: "consulting-proposal-template",
-    title: "Consulting Proposal Template: Land High-Ticket Clients [2026]",
+    title: "Consulting Proposal Template: Land High-Ticket Clients",
     description:
       "Win more consulting contracts with our professional consulting proposal template. Includes pricing strategies and persuasive frameworks.",
   },
