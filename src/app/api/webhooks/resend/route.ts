@@ -35,17 +35,22 @@ export async function POST(request: NextRequest) {
 
       if (emailId) {
         try {
-          const { data: emailContent, error } = await resend.emails.receiving.get(emailId);
-          if (error) {
-            console.error('Receiving API error:', error);
-          } else if (emailContent) {
-            html = emailContent.html || '';
-            text = emailContent.text || '';
-            console.log('Fetched email content, html length:', html.length, 'text length:', text.length);
+          console.log('Fetching email content for ID:', emailId);
+          const result = await resend.emails.receiving.get(emailId);
+          console.log('Receiving API response:', JSON.stringify(result, null, 2));
+
+          if (result.error) {
+            console.error('Receiving API error:', result.error);
+          } else if (result.data) {
+            html = result.data.html || '';
+            text = result.data.text || '';
+            console.log('Got content - html:', html.substring(0, 100), 'text:', text.substring(0, 100));
           }
         } catch (fetchError) {
           console.error('Failed to fetch email content:', fetchError);
         }
+      } else {
+        console.warn('No email_id in webhook payload');
       }
 
       // Forward to your email
