@@ -51,7 +51,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container px-6 pt-6">
+        <div className="container mx-auto px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -62,7 +62,7 @@ export default function ProposalVsQuoteVsEstimatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container px-6 max-w-4xl py-12 md:py-16">
+        <article className="container mx-auto px-6 max-w-4xl py-12 md:py-16">
           <header className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
               Proposal vs Quote vs Estimate: What&apos;s the Difference?
@@ -817,7 +817,7 @@ ________________________`}
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

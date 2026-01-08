@@ -51,7 +51,7 @@ export default function MarketingProposalTemplatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container px-6 pt-6">
+        <div className="container mx-auto px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -62,7 +62,7 @@ export default function MarketingProposalTemplatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container px-6 py-12 max-w-4xl">
+        <article className="container mx-auto px-6 py-12 max-w-4xl">
           <div className="mb-6">
             <Badge className="mb-4">Marketing Templates</Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
@@ -1037,7 +1037,7 @@ export default function MarketingProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

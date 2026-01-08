@@ -51,7 +51,7 @@ export default function WinningProposalGuidePage() {
 
       <main>
         {/* Hero */}
-        <section className="container px-6 py-12 md:py-16 max-w-4xl">
+        <section className="container mx-auto px-6 py-12 md:py-16 max-w-4xl">
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">Guide</Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
@@ -784,7 +784,7 @@ export default function WinningProposalGuidePage() {
         </section>
 
         {/* CTA */}
-        <section className="container px-6 pb-16 max-w-4xl">
+        <section className="container mx-auto px-6 pb-16 max-w-4xl">
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -809,7 +809,7 @@ export default function WinningProposalGuidePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
           <p className="mt-2">Last updated: January 2026</p>
         </div>

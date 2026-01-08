@@ -57,7 +57,7 @@ export default function ProposalStatistics2026Page() {
         </div>
       </nav>
 
-      <main className="container px-6 max-w-4xl py-12">
+      <main className="container mx-auto px-6 max-w-4xl py-12">
         {/* Article Header */}
         <article>
           <div className="mb-8">
@@ -1035,7 +1035,7 @@ export default function ProposalStatistics2026Page() {
 
       {/* Footer */}
       <footer className="border-t py-8 mt-12">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

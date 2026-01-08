@@ -51,7 +51,7 @@ export default function WebDesignProposalTemplatePage() {
 
       <main>
         {/* Hero */}
-        <section className="container px-6 py-12 md:py-16">
+        <section className="container mx-auto px-6 py-12 md:py-16">
           <div className="max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-4">
               Free Template
@@ -74,7 +74,7 @@ export default function WebDesignProposalTemplatePage() {
         </section>
 
         {/* Intro */}
-        <section className="container px-6 pb-12">
+        <section className="container mx-auto px-6 pb-12">
           <div className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
             <p className="text-lg leading-relaxed text-muted-foreground">
               A great web design portfolio gets you in the door. A great proposal closes the deal.
@@ -86,7 +86,7 @@ export default function WebDesignProposalTemplatePage() {
         </section>
 
         {/* Web Design Proposal Template */}
-        <section className="container px-6 pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-8">Web Design Proposal Template</h2>
 
@@ -818,7 +818,7 @@ export default function WebDesignProposalTemplatePage() {
         </section>
 
         {/* Tips Section */}
-        <section className="container px-6 pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-8">Web Design Proposal Tips</h2>
 
@@ -912,7 +912,7 @@ export default function WebDesignProposalTemplatePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="container px-6 pb-24">
+        <section className="container mx-auto px-6 pb-24">
           <Card className="bg-primary text-primary-foreground max-w-4xl mx-auto">
             <CardContent className="py-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -957,7 +957,7 @@ export default function WebDesignProposalTemplatePage() {
         </section>
 
         {/* Last Updated */}
-        <section className="container px-6 pb-16">
+        <section className="container mx-auto px-6 pb-16">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-sm text-muted-foreground italic">Last updated: January 2026</p>
           </div>
@@ -966,7 +966,7 @@ export default function WebDesignProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

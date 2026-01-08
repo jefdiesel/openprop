@@ -51,7 +51,7 @@ export default function ConsultingProposalTemplatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container px-6 pt-6">
+        <div className="container mx-auto px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -62,7 +62,7 @@ export default function ConsultingProposalTemplatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container px-6 py-12 md:py-16 max-w-4xl">
+        <article className="container mx-auto px-6 py-12 md:py-16 max-w-4xl">
           <div className="mb-8">
             <Badge variant="secondary" className="mb-4">Consulting</Badge>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
@@ -810,7 +810,7 @@ export default function ConsultingProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>

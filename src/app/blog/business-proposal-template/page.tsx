@@ -51,7 +51,7 @@ export default function BusinessProposalTemplatePage() {
 
       <main>
         {/* Breadcrumb */}
-        <div className="container px-6 pt-6">
+        <div className="container mx-auto px-6 pt-6">
           <Link
             href="/blog"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
@@ -62,7 +62,7 @@ export default function BusinessProposalTemplatePage() {
         </div>
 
         {/* Hero */}
-        <article className="container px-6 py-12 max-w-4xl">
+        <article className="container mx-auto px-6 py-12 max-w-4xl">
           <div className="mb-8">
             <Badge variant="secondary" className="mb-4">
               Templates & Guides
@@ -760,7 +760,7 @@ export default function BusinessProposalTemplatePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} OpenProposal. All rights reserved.</p>
         </div>
       </footer>
