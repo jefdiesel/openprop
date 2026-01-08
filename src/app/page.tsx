@@ -369,6 +369,12 @@ export default function Home() {
               </CardFooter>
             </Card>
           </div>
+          <p className="mt-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            Prefer to run it yourself?{" "}
+            <Link href="https://github.com/jefdiesel/openproposal" className="text-zinc-900 dark:text-zinc-100 underline underline-offset-2 hover:text-green-600 dark:hover:text-green-400">
+              Self-hosted installs are always free
+            </Link>
+          </p>
         </div>
       </section>
 
