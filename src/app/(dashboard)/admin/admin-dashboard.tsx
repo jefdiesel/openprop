@@ -60,23 +60,23 @@ interface Subscription {
   } | null;
 }
 
-interface Payment {
+interface Invoice {
   id: string;
+  number: string | null;
   amount: number;
+  amountDue: number;
   currency: string;
-  status: string;
-  paymentMethod: string | null;
-  stripePaymentIntentId: string | null;
-  createdAt: string;
-  document: {
-    id: string;
-    title: string;
-  };
-  recipient: {
-    id: string;
-    email: string;
-    name: string;
-  } | null;
+  status: string | null;
+  paid: boolean;
+  customerEmail: string | null;
+  customerName: string | null;
+  subscriptionId: string | null;
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
+  periodStart: string | null;
+  periodEnd: string | null;
+  createdAt: string | null;
+  paidAt: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -85,7 +85,7 @@ export function AdminDashboard() {
   const [stats, setStats] = React.useState<AdminStats | null>(null);
   const [users, setUsers] = React.useState<User[]>([]);
   const [subscriptions, setSubscriptions] = React.useState<Subscription[]>([]);
-  const [payments, setPayments] = React.useState<Payment[]>([]);
+  const [invoices, setInvoices] = React.useState<Invoice[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -149,25 +149,25 @@ export function AdminDashboard() {
     fetchSubscriptions();
   }, [activeTab]);
 
-  // Fetch payments when payments tab is active
+  // Fetch invoices when revenue tab is active
   React.useEffect(() => {
-    if (activeTab !== "payments") return;
+    if (activeTab !== "revenue") return;
 
-    async function fetchPayments() {
+    async function fetchInvoices() {
       setLoading(true);
       try {
-        const response = await fetch("/api/admin/payments?limit=100");
+        const response = await fetch("/api/admin/invoices?limit=100");
         if (response.ok) {
           const data = await response.json();
-          setPayments(data.payments || []);
+          setInvoices(data.invoices || []);
         }
       } catch (error) {
-        console.error("Failed to fetch payments:", error);
+        console.error("Failed to fetch invoices:", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchPayments();
+    fetchInvoices();
   }, [activeTab]);
 
   // Filter users based on search query
@@ -237,7 +237,7 @@ export function AdminDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -467,63 +467,80 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Payments Tab */}
-        <TabsContent value="payments" className="space-y-4">
+        {/* Revenue Tab - Stripe Invoices */}
+        <TabsContent value="revenue" className="space-y-4">
           <Card>
             <CardContent className="p-0">
               {loading ? (
                 <div className="flex items-center justify-center py-16">
-                  <p className="text-muted-foreground">Loading payments...</p>
+                  <p className="text-muted-foreground">Loading invoices...</p>
                 </div>
-              ) : payments.length === 0 ? (
+              ) : invoices.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                  <p className="text-muted-foreground">No payments yet</p>
+                  <p className="text-muted-foreground">No invoices yet</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Document</TableHead>
-                      <TableHead>Recipient</TableHead>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Customer</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">
-                          {payment.document?.title || "—"}
+                    {invoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium font-mono text-xs">
+                          {invoice.number || invoice.id.slice(0, 12)}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">
-                              {payment.recipient?.name || "—"}
+                              {invoice.customerName || "—"}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {payment.recipient?.email || ""}
+                              {invoice.customerEmail || ""}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">
-                          ${(payment.amount / 100).toFixed(2)}
+                          ${(invoice.amount / 100).toFixed(2)} {invoice.currency.toUpperCase()}
                         </TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              payment.status === "succeeded"
+                              invoice.paid
                                 ? "bg-green-50 text-green-700"
-                                : payment.status === "failed"
-                                ? "bg-red-50 text-red-700"
-                                : "bg-yellow-50 text-yellow-700"
+                                : invoice.status === "open"
+                                ? "bg-yellow-50 text-yellow-700"
+                                : "bg-gray-50 text-gray-700"
                             }`}
                           >
-                            {payment.status}
+                            {invoice.paid ? "paid" : invoice.status || "draft"}
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(payment.createdAt).toLocaleDateString()}
+                          {invoice.paidAt
+                            ? new Date(invoice.paidAt).toLocaleDateString()
+                            : invoice.createdAt
+                            ? new Date(invoice.createdAt).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          {invoice.hostedInvoiceUrl && (
+                            <a
+                              href={invoice.hostedInvoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              View
+                            </a>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
