@@ -25,31 +25,58 @@ interface AdminStats {
 
 interface User {
   id: string;
-  name: string | null;
+  name: string;
   email: string;
   createdAt: string;
-  subscriptionStatus: string | null;
+  isAdmin: boolean;
+  subscription: {
+    planId: string;
+    status: string;
+    billingInterval: string;
+    currentPeriodEnd: string | null;
+  } | null;
 }
 
 interface Subscription {
   id: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string;
+  planId: string;
   status: string;
-  plan: string;
-  amount: number;
-  currentPeriodEnd: string;
+  billingInterval: string;
+  isEarlyBird: boolean;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  canceledAt: string | null;
+  createdAt: string;
+  stripeSubscriptionId: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  organization: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface Payment {
   id: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string;
   amount: number;
+  currency: string;
   status: string;
+  paymentMethod: string | null;
+  stripePaymentIntentId: string | null;
   createdAt: string;
+  document: {
+    id: string;
+    title: string;
+  };
+  recipient: {
+    id: string;
+    email: string;
+    name: string;
+  } | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -87,10 +114,10 @@ export function AdminDashboard() {
     async function fetchUsers() {
       setLoading(true);
       try {
-        const response = await fetch("/api/admin/users");
+        const response = await fetch("/api/admin/users?limit=100");
         if (response.ok) {
           const data = await response.json();
-          setUsers(data);
+          setUsers(data.users || []);
         }
       } catch (error) {
         console.error("Failed to fetch users:", error);
@@ -108,10 +135,10 @@ export function AdminDashboard() {
     async function fetchSubscriptions() {
       setLoading(true);
       try {
-        const response = await fetch("/api/admin/subscriptions");
+        const response = await fetch("/api/admin/subscriptions?limit=100");
         if (response.ok) {
           const data = await response.json();
-          setSubscriptions(data);
+          setSubscriptions(data.subscriptions || []);
         }
       } catch (error) {
         console.error("Failed to fetch subscriptions:", error);
@@ -129,10 +156,10 @@ export function AdminDashboard() {
     async function fetchPayments() {
       setLoading(true);
       try {
-        const response = await fetch("/api/admin/payments");
+        const response = await fetch("/api/admin/payments?limit=100");
         if (response.ok) {
           const data = await response.json();
-          setPayments(data);
+          setPayments(data.payments || []);
         }
       } catch (error) {
         console.error("Failed to fetch payments:", error);
@@ -323,12 +350,12 @@ export function AdminDashboard() {
                           <TableCell>
                             <span
                               className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                user.subscriptionStatus === "active"
+                                user.subscription?.status === "active"
                                   ? "bg-green-50 text-green-700"
                                   : "bg-gray-50 text-gray-700"
                               }`}
                             >
-                              {user.subscriptionStatus || "free"}
+                              {user.subscription?.status || "free"}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -395,7 +422,7 @@ export function AdminDashboard() {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead>Plan</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>Billing</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Period End</TableHead>
                     </TableRow>
@@ -406,15 +433,15 @@ export function AdminDashboard() {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">
-                              {sub.userName || "—"}
+                              {sub.user?.name || sub.organization?.name || "—"}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {sub.userEmail}
+                              {sub.user?.email || ""}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="capitalize">{sub.plan}</TableCell>
-                        <TableCell>${(sub.amount / 100).toFixed(2)}</TableCell>
+                        <TableCell className="capitalize">{sub.planId}</TableCell>
+                        <TableCell className="capitalize">{sub.billingInterval}</TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
@@ -429,7 +456,7 @@ export function AdminDashboard() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(sub.currentPeriodEnd).toLocaleDateString()}
+                          {sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : "—"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -456,7 +483,8 @@ export function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>User</TableHead>
+                      <TableHead>Document</TableHead>
+                      <TableHead>Recipient</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
@@ -465,13 +493,16 @@ export function AdminDashboard() {
                   <TableBody>
                     {payments.map((payment) => (
                       <TableRow key={payment.id}>
+                        <TableCell className="font-medium">
+                          {payment.document?.title || "—"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">
-                              {payment.userName || "—"}
+                              {payment.recipient?.name || "—"}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {payment.userEmail}
+                              {payment.recipient?.email || ""}
                             </span>
                           </div>
                         </TableCell>
