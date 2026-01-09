@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Send,
   Users,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,12 @@ const navItems = [
     href: "/settings",
     icon: Settings,
   },
+  {
+    title: "Admin",
+    href: "/admin",
+    icon: Shield,
+    adminOnly: true,
+  },
 ];
 
 interface SidebarProps {
@@ -79,10 +86,27 @@ function SidebarContent({
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mounted, setMounted] = React.useState(false);
+  const [isAdmin, setIsAdmin] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Check if user is admin
+  React.useEffect(() => {
+    async function checkAdmin() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        // If we get a 200, user is admin (the endpoint requires admin)
+        setIsAdmin(res.ok);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    if (session?.user) {
+      checkAdmin();
+    }
+  }, [session?.user]);
 
   const user = session?.user;
   const initials = user?.name
@@ -132,7 +156,9 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
-        {navItems.map((item) => {
+        {navItems
+          .filter((item) => !item.adminOnly || isAdmin)
+          .map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
