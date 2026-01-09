@@ -54,6 +54,11 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openproposal_test
           NEXTAUTH_SECRET: test-secret-key-for-ci-only
           NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_build
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          RESEND_API_KEY: re_placeholder
+          LIVEBLOCKS_SECRET_KEY: sk_placeholder
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
@@ -111,6 +116,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openproposal_test
           NEXTAUTH_SECRET: test-secret-key-for-ci-only
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_build
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          RESEND_API_KEY: re_placeholder
+          LIVEBLOCKS_SECRET_KEY: sk_placeholder
 
       - name: Run E2E tests
         run: pnpm test:e2e
@@ -119,6 +130,11 @@ jobs:
           NEXTAUTH_SECRET: test-secret-key-for-ci-only
           NEXTAUTH_URL: http://localhost:3000
           BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_build
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          RESEND_API_KEY: re_placeholder
+          LIVEBLOCKS_SECRET_KEY: sk_placeholder
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v3
