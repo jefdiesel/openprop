@@ -96,7 +96,7 @@ export default async function TeamBillingPage() {
           </Link>
         </Button>
         <h1 className="text-3xl font-bold">Team Billing</h1>
-        <p className="text-muted-foreground">Manage your team's subscription and billing</p>
+        <p className="text-muted-foreground">Manage your team&apos;s subscription and billing</p>
       </div>
 
       <div className="grid gap-6">
@@ -106,7 +106,7 @@ export default async function TeamBillingPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Current Plan</CardTitle>
-                <CardDescription>Your team's subscription details</CardDescription>
+                <CardDescription>Your team&apos;s subscription details</CardDescription>
               </div>
               {subscription && (
                 <Badge variant={isActive ? "default" : "secondary"}>

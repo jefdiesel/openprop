@@ -611,7 +611,7 @@ export default function GoogleDriveSettingsPage() {
             <div className="space-y-2">
               <h4 className="text-sm font-medium">When are documents backed up?</h4>
               <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>- When a document status changes to "completed"</li>
+                <li>- When a document status changes to &quot;completed&quot;</li>
                 <li>- When all required signatures are collected</li>
                 <li>- Only if auto-backup is enabled</li>
               </ul>

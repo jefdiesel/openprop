@@ -101,9 +101,9 @@ export default function DocuSignImportPage() {
       }
 
       setTemplates(data.templates || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to load templates:", error);
-      setError(error.message || "Failed to load templates");
+      setError(error instanceof Error ? error.message : "Failed to load templates");
     } finally {
       setIsLoadingTemplates(false);
     }
@@ -127,9 +127,9 @@ export default function DocuSignImportPage() {
       }
 
       setEnvelopes(data.envelopes || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to load envelopes:", error);
-      setError(error.message || "Failed to load envelopes");
+      setError(error instanceof Error ? error.message : "Failed to load envelopes");
     } finally {
       setIsLoadingEnvelopes(false);
     }
@@ -206,9 +206,9 @@ export default function DocuSignImportPage() {
       const jobId = data.jobId;
       await pollImportStatus(jobId);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Import failed:", error);
-      setError(error.message || "Import failed");
+      setError(error instanceof Error ? error.message : "Import failed");
       setIsImporting(false);
     }
   };

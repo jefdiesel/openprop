@@ -36,7 +36,7 @@ export default async function TeamSettingsPage() {
           <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">No Team Selected</h1>
           <p className="text-muted-foreground mb-6 max-w-md">
-            You're currently in your personal context. Switch to a team or create one to access team settings.
+            You&apos;re currently in your personal context. Switch to a team or create one to access team settings.
           </p>
           <Button asChild>
             <Link href="/create-team">Create a Team</Link>
@@ -162,7 +162,7 @@ export default async function TeamSettingsPage() {
           <CardContent>
             <MemberList
               organizationId={org.id}
-              members={members as any}
+              members={members as Array<{ id: string; name: string | null; email: string; role: string; createdAt: Date }>}
               currentUserRole={userRole as "owner" | "admin" | "member"}
               currentUserId={session.user.id}
             />

@@ -23,12 +23,12 @@ export const dynamic = "force-dynamic";
 
 function getFileIcon(fileType: string) {
   if (fileType.startsWith("image/")) {
-    return <Image className="h-4 w-4" />;
+    return <Image className="h-4 w-4" aria-hidden="true" />;
   }
   if (fileType.includes("pdf") || fileType.includes("document")) {
-    return <FileText className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" aria-hidden="true" />;
   }
-  return <FileIcon className="h-4 w-4" />;
+  return <FileIcon className="h-4 w-4" aria-hidden="true" />;
 }
 
 export default async function TeamStoragePage() {
@@ -91,7 +91,7 @@ export default async function TeamStoragePage() {
           </Link>
         </Button>
         <h1 className="text-3xl font-bold">Team Storage</h1>
-        <p className="text-muted-foreground">View and manage your team's storage usage</p>
+        <p className="text-muted-foreground">View and manage your team&apos;s storage usage</p>
       </div>
 
       <div className="grid gap-6">

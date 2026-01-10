@@ -76,14 +76,17 @@ export default function DocumentViewPage({ params }: PageProps) {
           currentVersion: data.document.current_version || 1,
         });
         // Map recipients
-        const mappedRecipients = (data.recipients || []).map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          email: r.email,
-          role: r.role,
-          status: r.status,
-          signedAt: r.signed_at,
-        }));
+        const mappedRecipients = (data.recipients || []).map((r: unknown) => {
+          const recipient = r as { id: string; name: string | null; email: string; role: string; status: string; signed_at: string | null };
+          return {
+            id: recipient.id,
+            name: recipient.name,
+            email: recipient.email,
+            role: recipient.role,
+            status: recipient.status,
+            signedAt: recipient.signed_at,
+          };
+        });
         setRecipients(mappedRecipients);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load document");
