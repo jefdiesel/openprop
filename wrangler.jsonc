@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": "worker.ts",
+  "name": "openprop",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "openprop"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": [
+      "0 9 * * *"
+    ]
+  },
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "NEXTAUTH_URL": "https://openprop.wrapit.workers.dev",
+    "AUTH_URL": "https://openprop.wrapit.workers.dev",
+    "NEXT_PUBLIC_APP_URL": "https://openprop.wrapit.workers.dev",
+    "AUTH_TRUST_HOST": "true",
+    "CRONS_ENABLED": "false"
+  }
+}
