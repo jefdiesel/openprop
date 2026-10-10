@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || "re_unset") // fallback lets next build collect page data without the secret;
 
 // Forward inbound emails to your personal email
 const FORWARD_TO = process.env.EMAIL_FORWARD_TO || '';

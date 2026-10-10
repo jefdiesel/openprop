@@ -31,7 +31,7 @@ import type {
   SignatureData,
 } from "@/types/database";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || "re_unset") // fallback lets next build collect page data without the secret;
 
 // GET: Fetch document by token and record view event
 export async function GET(
