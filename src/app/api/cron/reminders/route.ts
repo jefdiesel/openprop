@@ -10,7 +10,7 @@ import {
   generateReminderPlainText,
 } from '@/lib/email-templates'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || "re_unset") // fallback lets next build collect page data without the secret
 
 // Default reminder days if not specified in document settings
 const DEFAULT_REMINDER_DAYS = [1, 3, 7]
